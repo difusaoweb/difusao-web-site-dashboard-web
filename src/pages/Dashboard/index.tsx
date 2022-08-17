@@ -14,7 +14,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Copyright } from '../../components/atoms/Copyright'
 import { AppBar } from '../../components/atoms/AppBar'
 import { SideBar } from '../../components/molecules/SideBar'
-import { DashboardTaxonomiesProducts } from '../../components/organims/DashboardTaxonomiesProducts'
+import { DashboardCasesServices } from '../../components/organims/DashboardCasesServices'
 import { RootState } from '../../redux'
 
 export const Dashboard: React.FC = () => {

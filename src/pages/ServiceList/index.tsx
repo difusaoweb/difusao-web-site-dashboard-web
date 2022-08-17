@@ -7,15 +7,14 @@ import {
   Grid,
   Button
 } from '@mui/material'
-import { Copyright } from '../../components/atoms/Copyright'
-
 import { Add as AddIcon } from '@mui/icons-material'
 
-import { ProductList } from '../../components/ecosystems/ProductList'
+import { Copyright } from '../../components/atoms/Copyright'
+import { ServiceList } from '../../components/ecosystems/ServiceList'
 import { AppBar } from '../../components/atoms/AppBar'
 import { SideBar } from '../../components/molecules/SideBar'
 
-export const ProductsList: React.FC = () => {
+export const ServiceListPage: React.FC = () => {
   const [open, setOpen] = React.useState(true)
   const toggleDrawer = () => {
     setOpen(!open)
@@ -23,7 +22,7 @@ export const ProductsList: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <AppBar open={open} toggleDrawer={toggleDrawer} title="Produtos" />
+      <AppBar open={open} toggleDrawer={toggleDrawer} title="Serviço" />
       <SideBar open={open} toggleDrawer={toggleDrawer} />
       <Box
         component="main"
@@ -46,22 +45,22 @@ export const ProductsList: React.FC = () => {
                 variant="h5"
                 sx={{ fontWeight: 'bold' }}
               >
-                Lista de produtos
+                Lista de serviços
               </Typography>
             </Box>
             <Box sx={{ flexShrink: 0 }}>
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                href="/produtos/adicionar/"
+                href="/servicos/adicionar/"
               >
-                Novo Produto
+                Novo Serviço
               </Button>
             </Box>
           </Box>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <ProductList />
+              <ServiceList />
             </Grid>
           </Grid>
           <Copyright />

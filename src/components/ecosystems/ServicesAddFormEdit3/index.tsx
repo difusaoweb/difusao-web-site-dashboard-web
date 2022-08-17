@@ -1,14 +1,14 @@
 import * as React from 'react'
 import { Paper, Box, TextField } from '@mui/material'
 
-interface ProductsAddFormEdit3Props {
+interface ServicesAddFormEdit3Props {
   price: number | null
   setPrice(price: number): void
 }
-export const ProductsAddFormEdit3 = ({
+export const ServicesAddFormEdit3 = ({
   price,
   setPrice
-}: ProductsAddFormEdit3Props) => {
+}: ServicesAddFormEdit3Props) => {
   // const [price, setPrice] = React.useState<string | null>(null)
 
   return (

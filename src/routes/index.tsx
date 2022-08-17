@@ -12,9 +12,9 @@ import { Alert } from '../components/atoms/Alert'
 import { Loading } from '../components/atoms/Loading'
 
 export const Routes = () => {
-  const dispatch = useAppDispatch()
   const { getStorageDataToken, checkAuthenticationAuthenticated } =
     useAppSelector(state => state.access)
+  const dispatch = useAppDispatch()
 
   const [isLoadingGetStorageData, setIsLoadingGetStorageData] =
     React.useState(true)
@@ -36,14 +36,11 @@ export const Routes = () => {
     onReduxAccessGetStorageDataFunction()
   }, [])
 
-  // React.useEffect(() => {
-  //   if (getStorageDataToken) {
-  //     onReduxAccessCheckAuthenticationFunction()
-  //   }
-  // }, [getStorageDataToken])
-
-  console.log('getStorageDataToken')
-  console.log(getStorageDataToken)
+  React.useEffect(() => {
+    if (getStorageDataToken) {
+      onReduxAccessCheckAuthenticationFunction()
+    }
+  }, [getStorageDataToken])
 
   if (isLoadingGetStorageData || isLoadingCheckAuthentication)
     return <Loading />

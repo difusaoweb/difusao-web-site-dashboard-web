@@ -204,8 +204,6 @@ export function reduxAccessGetStorageDataFunction() {
         api.defaults.headers.common.Authorization = `Bearer ${token}`
       }
 
-      console.log({ token, user })
-
       dispatch(
         reduxAccessGetStorageDataAction({
           success: { token, user },
@@ -234,14 +232,15 @@ export function reduxAccessCheckAuthenticationFunction() {
   return async (dispatch: Dispatch<AccessActionTypes>) => {
     try {
       const { data } = await accessService.checkAuthentication()
-      console.log(data)
 
-      // dispatch(
-      //   reduxAccessCheckAuthenticationAction({
-      //     success: { authenticated: true },
-      //     failure: null
-      //   })
-      // )
+      const authenticated = data?.success?.authenticated
+
+      dispatch(
+        reduxAccessCheckAuthenticationAction({
+          success: { authenticated },
+          failure: null
+        })
+      )
     } catch (err) {
       console.log(err)
       let status: number | null = null

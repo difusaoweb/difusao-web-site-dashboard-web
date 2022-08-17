@@ -31,13 +31,13 @@ export const ListItems = () => {
   React.useEffect(() => {
     function onSetCollapse() {
       switch (pathname) {
-        case '/produtos':
-          setSelectedIndexCollapse('/produtos')
-          setItemCollapsed('/produtos')
+        case '/servicos':
+          setSelectedIndexCollapse('/servicos')
+          setItemCollapsed('/servicos')
           break
-        case '/produtos/adicionar':
-          setSelectedIndexCollapse('/produtos')
-          setItemCollapsed('/produtos')
+        case '/servicos/adicionar':
+          setSelectedIndexCollapse('/servicos')
+          setItemCollapsed('/servicos')
           break
         case '/usuarios':
           setSelectedIndexCollapse('/usuarios')
@@ -61,34 +61,34 @@ export const ListItems = () => {
         <ListItemText primary="Dashboard" />
       </ListItemButton>
       <ListItemButton
-        selected={selectedIndexCollapse === '/produtos'}
-        onClick={() => handleSetItemCollapse('/produtos')}
+        selected={selectedIndexCollapse === '/servicos'}
+        onClick={() => handleSetItemCollapse('/servicos')}
       >
         <ListItemIcon>
           <AppsIcon />
         </ListItemIcon>
-        <ListItemText primary="Produtos" />
-        {itemCollapsed === '/produtos' ? (
+        <ListItemText primary="Serviços" />
+        {itemCollapsed === '/servicos' ? (
           <ExpandLessIcon />
         ) : (
           <ExpandMoreIcon />
         )}
       </ListItemButton>
-      <Collapse timeout="auto" unmountOnExit in={itemCollapsed === '/produtos'}>
+      <Collapse timeout="auto" unmountOnExit in={itemCollapsed === '/servicos'}>
         <List component="div" disablePadding>
           <ListItemButton
             sx={{ pl: 4 }}
             component="a"
-            href="/produtos"
-            selected={selectedIndex === '/produtos'}
+            href="/servicos"
+            selected={selectedIndex === '/servicos'}
           >
             <ListItemText primary="Lista" />
           </ListItemButton>
           <ListItemButton
             sx={{ pl: 4 }}
             component="a"
-            href="/produtos/adicionar"
-            selected={selectedIndex === '/produtos/adicionar'}
+            href="/servicos/adicionar"
+            selected={selectedIndex === '/servicos/adicionar'}
           >
             <ListItemText primary="Adicionar" />
           </ListItemButton>

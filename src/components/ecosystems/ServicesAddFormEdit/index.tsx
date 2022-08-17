@@ -13,18 +13,18 @@ import { UploadImagePreview } from '../../atoms/UploadImagePreview'
 import { LibraryModal } from '../../organims/LibraryModal'
 import ImagePlaceholderUploadFile from '../../../assets/images/ImageUploadPlaceholder.png'
 
-interface ProductsAddFormEditProps {
+interface ServicesAddFormEditProps {
   name: string | null
   setName(name: string): void
   description: string | null
   setDescription(description: string): void
 }
-export const ProductsAddFormEdit = ({
+export const ServicesAddFormEdit = ({
   name,
   setName,
   description,
   setDescription
-}: ProductsAddFormEditProps) => {
+}: ServicesAddFormEditProps) => {
   // const [name, setName] = React.useState<string | null>(null)
   // const [description, setDescription] = React.useState<string | null>(null)
   const [image, setImage] = React.useState<string | null>(null)
@@ -34,7 +34,7 @@ export const ProductsAddFormEdit = ({
     <Paper sx={{ width: '100%', mb: 2, padding: 3 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <TextField
-          label="Nome do Produto"
+          label="Nome do Serviço"
           variant="outlined"
           value={name}
           onChange={event => setName(String(event.target.value))}

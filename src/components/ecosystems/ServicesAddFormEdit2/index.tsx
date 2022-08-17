@@ -12,9 +12,9 @@ import {
 } from '@mui/material'
 import { useSelector, useDispatch } from 'react-redux'
 
-import { TaxonomyData, getTaxonomies, RootState } from '../../../redux'
+import { CaseData, getCases, RootState } from '../../../redux'
 
-interface ProductsAddFormEdit2Props {
+interface ServicesAddFormEdit2Props {
   inStock: boolean
   setInStock(stock: boolean): void
   sku: string | null
@@ -22,46 +22,46 @@ interface ProductsAddFormEdit2Props {
   categoryId: number | null
   setCategoryId(categoryId: number): void
 }
-export const ProductsAddFormEdit2 = ({
+export const ServicesAddFormEdit2 = ({
   inStock,
   setInStock,
   sku,
   setSku,
   categoryId,
   setCategoryId
-}: ProductsAddFormEdit2Props) => {
-  const { taxonomiesList } = useSelector(
-    (state: ReturnType<RootState>) => state.taxonomies
+}: ServicesAddFormEdit2Props) => {
+  const { casesList } = useSelector(
+    (state: ReturnType<RootState>) => state.cases
   )
   const dispatch = useDispatch()
 
-  const [loadingGetTaxonomies, setLoadingGetTaxonomies] = React.useState(false)
+  const [loadingGetCases, setLoadingGetCases] = React.useState(false)
 
   // const [inStock, setInStock] = React.useState<boolean>(true)
   // const [sku, setSku] = React.useState<string | null>(null)
   // const [category, setCategory] = React.useState<number | null>(null)
-  const [categoryList, setCategoryList] = React.useState<TaxonomyData[] | null>(
+  const [categoryList, setCategoryList] = React.useState<CaseData[] | null>(
     null
   )
 
   React.useEffect(() => {
-    async function onGetTaxonomies() {
-      if (loadingGetTaxonomies) {
+    async function onGetCases() {
+      if (loadingGetCases) {
         return
       }
 
-      setLoadingGetTaxonomies(true)
-      await dispatch(getTaxonomies())
-      setLoadingGetTaxonomies(false)
+      setLoadingGetCases(true)
+      await dispatch(getCases())
+      setLoadingGetCases(false)
     }
-    onGetTaxonomies()
+    onGetCases()
   }, [])
 
   React.useEffect(() => {
-    if (taxonomiesList) {
-      setCategoryList(taxonomiesList)
+    if (casesList) {
+      setCategoryList(casesList)
     }
-  }, [taxonomiesList])
+  }, [casesList])
 
   return (
     <Paper sx={{ width: '100%', mb: 3, padding: 3 }}>
@@ -77,7 +77,7 @@ export const ProductsAddFormEdit2 = ({
           sx={{ mb: 3 }}
         />
         <TextField
-          label="SKU do produto"
+          label="SKU do servico"
           variant="outlined"
           sx={{ mb: 3 }}
           value={sku}

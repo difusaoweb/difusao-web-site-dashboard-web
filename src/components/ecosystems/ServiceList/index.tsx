@@ -31,13 +31,13 @@ import {
   Tooltip,
   Avatar
 } from '@mui/material'
-import { useSelector, useDispatch } from 'react-redux'
 
 import {
-  deleteProducts,
-  ProductData,
-  getProducts,
-  RootState
+  deleteServices,
+  ServiceData,
+  useAppSelector,
+  reduxServicesGetServiceListFunction,
+  useAppDispatch
 } from '../../../redux'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
@@ -80,47 +80,28 @@ function stableSort<T>(
 }
 
 interface HeadCell {
-  id: keyof ProductData
+  id: keyof ServiceData
   label: string
-  numeric: boolean
+  numeric?: boolean
   noShort?: true
 }
 
 const headCells: readonly HeadCell[] = [
   {
     id: 'image',
-    numeric: false,
     label: 'Imagem',
     noShort: true
   },
   {
-    id: 'name',
-    numeric: false,
-    label: 'Nome'
+    id: 'title',
+    label: 'Título'
   },
   {
-    id: 'sku',
-    numeric: true,
-    label: 'SKU'
-  },
-  {
-    id: 'stock',
-    numeric: false,
-    label: 'Stock'
-  },
-  {
-    id: 'price',
-    numeric: true,
-    label: 'Price'
-  },
-  {
-    id: 'category',
-    numeric: false,
-    label: 'Categoria'
+    id: 'description',
+    label: 'Descrição'
   },
   {
     id: 'created_at',
-    numeric: false,
     label: 'Data'
   }
 ]
@@ -129,7 +110,7 @@ interface EnhancedTableProps {
   numSelected: number
   onRequestSort: (
     event: React.MouseEvent<unknown>,
-    property: keyof ProductData
+    property: keyof ServiceData
   ) => void
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
   order: Order
@@ -147,7 +128,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     onRequestSort
   } = props
   const createSortHandler =
-    (property: keyof ProductData) => (event: React.MouseEvent<unknown>) => {
+    (property: keyof ServiceData) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property)
     }
 
@@ -201,7 +182,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 interface EnhancedTableToolbarProps {
   loading: boolean
   numSelected: number
-  onGetProducts(): void
+  onGetServiceList(): void
   handleRowCellDelete(ids: number[]): void
   selecteds: number[]
 }
@@ -210,7 +191,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const {
     loading,
     numSelected,
-    onGetProducts,
+    onGetServiceList,
     handleRowCellDelete,
     selecteds
   } = props
@@ -245,7 +226,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           id="tableTitle"
           component="div"
         >
-          Produtos
+          Serviços
         </Typography>
       )}
       {numSelected > 0 ? (
@@ -259,7 +240,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           {loading ? (
             <CircularProgress size={24} sx={{ margin: 1 }} />
           ) : (
-            <IconButton onClick={onGetProducts}>
+            <IconButton onClick={onGetServiceList}>
               <ReplayIcon />
             </IconButton>
           )}
@@ -269,32 +250,37 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   )
 }
 
-export function ProductList() {
+export const ServiceList = () => {
+  const {
+    getServiceListServices,
+    getServiceListLastPage,
+    getServiceListTotal,
+    deletedServices
+  } = useAppSelector(state => state.services)
   const theme = useTheme()
-  const { productsList, deletedProducts } = useSelector(
-    (state: ReturnType<RootState>) => state.products
-  )
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
-  const [loadingGetProducts, setLoadingGetProducts] = React.useState(false)
-  const [loadingDeleteProducts, setLoadingDeleteProducts] =
+  const [isLoadingGetServiceList, setIsLoadingGetServiceList] =
     React.useState(false)
-  const [rows, setRows] = React.useState<ProductData[] | null>(null)
+  const [loadingDeleteServices, setLoadingDeleteServices] =
+    React.useState(false)
+  const [rows, setRows] = React.useState<ServiceData[] | null>(null)
   const [order, setOrder] = React.useState<Order>('desc')
-  const [orderBy, setOrderBy] = React.useState<keyof ProductData>('created_at')
+  const [orderBy, setOrderBy] = React.useState<keyof ServiceData>('created_at')
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
   const [selectedsDestroy, setSelectedsDestroy] = React.useState<
     number[] | null
   >(null)
-  const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(50)
+  const [pageQuery, setPageQuery] = React.useState(1)
+  const [pageRows, setPageRows] = React.useState(0)
+  const [perPageRows, setPerPageRows] = React.useState(3)
 
   const [rowCellAnchorEl, setRowCellAnchorEl] = React.useState<any | null>(null)
   const rowCellOpen = Boolean(rowCellAnchorEl)
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
-    property: keyof ProductData
+    property: keyof ServiceData
   ) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
@@ -335,17 +321,6 @@ export function ProductList() {
     }
   }
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
-
   function isSelected(id: number) {
     if (selecteds) {
       return selecteds.indexOf(id) !== -1
@@ -354,7 +329,9 @@ export function ProductList() {
   }
 
   const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (rows?.length ?? 0)) : 0
+    pageRows > 0
+      ? Math.max(0, (1 + pageRows) * perPageRows - (rows?.length ?? 0))
+      : 0
 
   function handleRowCellClick(index, event) {
     setRowCellAnchorEl({ [index]: event.currentTarget })
@@ -365,7 +342,7 @@ export function ProductList() {
   }
 
   async function handleRowCellDelete(ids: number[]) {
-    if (loadingDeleteProducts) {
+    if (loadingDeleteServices) {
       return
     }
 
@@ -375,9 +352,9 @@ export function ProductList() {
     console.log('handleRowCellDelete')
     console.log(ids)
 
-    setLoadingDeleteProducts(true)
-    await dispatch(deleteProducts(ids))
-    setLoadingDeleteProducts(false)
+    setLoadingDeleteServices(true)
+    await dispatch(deleteServices(ids))
+    setLoadingDeleteServices(false)
   }
 
   function handleRowCellEdit(id: number) {
@@ -386,47 +363,65 @@ export function ProductList() {
     console.log(id)
   }
 
-  async function onGetProducts() {
-    if (loadingGetProducts) {
-      return
+  function handleChangePage(thePage: number) {
+    setPageRows(thePage)
+    if (thePage === pageQuery) {
+      setPageQuery(page => page + 1)
     }
-    setSelecteds(null)
-
-    setLoadingGetProducts(true)
-    await dispatch(getProducts())
-    setLoadingGetProducts(false)
   }
 
-  React.useEffect(() => {
-    onGetProducts()
-  }, [])
+  function handleChangeRowsPerPage(thePerPage: number) {
+    setPerPageRows(thePerPage)
+    setPageRows(0)
+    setPageQuery(1)
+  }
+
+  async function onGetServiceList() {
+    if (isLoadingGetServiceList) return
+    setSelecteds(null)
+
+    setIsLoadingGetServiceList(true)
+    await dispatch(
+      reduxServicesGetServiceListFunction({
+        page: pageQuery,
+        perPage: perPageRows
+      })
+    )
+    setIsLoadingGetServiceList(false)
+  }
+
+  console.log('renderizou')
 
   React.useEffect(() => {
-    if (productsList) {
-      setRows(productsList)
-    }
-  }, [productsList])
+    onGetServiceList()
+  }, [pageQuery, perPageRows])
 
   React.useEffect(() => {
-    if (deletedProducts) {
-      if (!!rows && !!selectedsDestroy) {
-        setRows(
-          rows.filter(
-            row => selectedsDestroy.filter(id => id === row.id).length < 1
-          )
-        )
-        setSelectedsDestroy(null)
-      }
+    if (getServiceListServices) {
+      setRows(getServiceListServices)
     }
-  }, [deletedProducts])
+  }, [getServiceListServices])
+
+  // React.useEffect(() => {
+  //   if (deletedServices) {
+  //     if (!!rows && !!selectedsDestroy) {
+  //       setRows(
+  //         rows.filter(
+  //           row => selectedsDestroy.filter(id => id === row.id).length < 1
+  //         )
+  //       )
+  //       setSelectedsDestroy(null)
+  //     }
+  //   }
+  // }, [deletedServices])
 
   return (
     <>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar
           numSelected={selecteds?.length ?? 0}
-          loading={loadingGetProducts}
-          onGetProducts={onGetProducts}
+          loading={isLoadingGetServiceList}
+          onGetServiceList={onGetServiceList}
           handleRowCellDelete={handleRowCellDelete}
           selecteds={selecteds ?? []}
         />
@@ -447,7 +442,13 @@ export function ProductList() {
             {rows && (
               <TableBody>
                 {stableSort(rows, getComparator(order, orderBy))
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .slice(
+                    pageRows * perPageRows,
+                    pageRows * perPageRows +
+                      (perPageRows === -1
+                        ? getServiceListTotal ?? 0
+                        : perPageRows)
+                  )
                   .map((row, index) => {
                     const isItemSelected = isSelected(row.id)
                     const labelId = `enhanced-table-checkbox-${index}`
@@ -477,19 +478,14 @@ export function ProductList() {
                         </TableCell>
                         <TableCell>
                           <Avatar
-                            alt={row.name}
+                            alt={row.title}
                             src={row.image}
                             variant="rounded"
                             sx={{ width: 100, height: 100 }}
                           />
                         </TableCell>
-                        <TableCell align="left">{row.name}</TableCell>
-                        <TableCell align="left">{row.sku}</TableCell>
-                        <TableCell align="left">
-                          {row.stock ? 'Em estoque' : 'Em falta'}
-                        </TableCell>
-                        <TableCell align="left">{row.price}</TableCell>
-                        <TableCell align="left">{row.category}</TableCell>
+                        <TableCell align="left">{row.title}</TableCell>
+                        <TableCell align="left">{row.description}</TableCell>
                         <TableCell align="left">{rowDateTimeString}</TableCell>
                         <TableCell>
                           <IconButton
@@ -547,16 +543,22 @@ export function ProductList() {
                 )}
               </TableBody>
             )}
+            {/* <p>{pageRows}</p>
+            <p>{perPageRows}</p>
+            <p>{JSON.stringify(rows)}</p>
+            <p>{JSON.stringify(getServiceListServices)}</p> */}
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 50, 100, { value: -1, label: 'Todos' }]}
+          rowsPerPageOptions={[10, 3, 100, { value: -1, label: 'Todos' }]}
           component="div"
-          count={rows?.length ?? 0}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          page={pageRows}
+          rowsPerPage={perPageRows}
+          count={getServiceListTotal ?? 0}
+          onPageChange={(e, page) => handleChangePage(page)}
+          onRowsPerPageChange={e =>
+            handleChangeRowsPerPage(Number(e.target.value))
+          }
         />
       </Paper>
     </>

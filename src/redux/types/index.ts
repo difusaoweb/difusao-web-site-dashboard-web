@@ -1,5 +1,5 @@
 export * from './alerts.types'
 export * from './access.types'
 export * from './users.types'
-export * from './taxonomies.types'
-export * from './products.types'
+export * from './services.types'
+export * from './cases.types'

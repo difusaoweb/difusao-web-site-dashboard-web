@@ -3,7 +3,7 @@ import * as React from 'react'
 import { Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material'
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material'
 
-const ProductTableRowMenu = () => {
+const ServiceTableRowMenu = () => {
   return (
     <Menu
       id="rowCellBasicMenu"
@@ -34,4 +34,4 @@ const ProductTableRowMenu = () => {
   )
 }
 
-export default ProductTableRowMenu
+export default ServiceTableRowMenu

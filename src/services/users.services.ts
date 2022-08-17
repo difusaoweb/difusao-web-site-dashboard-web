@@ -32,5 +32,5 @@ async function createUser({
 }
 
 async function deleteUsers(ids: number[]): Promise<AxiosResponse> {
-  return await api.get('/users/delete', { params: { product_ids: ids } })
+  return await api.get('/users/delete', { params: { service_ids: ids } })
 }

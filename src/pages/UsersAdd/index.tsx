@@ -14,14 +14,14 @@ import { useSelector, useDispatch } from 'react-redux'
 import { Copyright } from '../../components/atoms/Copyright'
 import { AppBar } from '../../components/atoms/AppBar'
 import { SideBar } from '../../components/molecules/SideBar'
-import { ProductsAddFormEdit } from '../../components/ecosystems/ProductsAddFormEdit'
-import { ProductsAddFormEdit2 } from '../../components/ecosystems/ProductsAddFormEdit2'
-import { ProductsAddFormEdit3 } from '../../components/ecosystems/ProductsAddFormEdit3'
-import { createProduct, RootState } from '../../redux'
+import { ServicesAddFormEdit } from '../../components/ecosystems/ServicesAddFormEdit'
+import { ServicesAddFormEdit2 } from '../../components/ecosystems/ServicesAddFormEdit2'
+import { ServicesAddFormEdit3 } from '../../components/ecosystems/ServicesAddFormEdit3'
+import { createService, RootState } from '../../redux'
 
 export const UsersAdd: React.FC = () => {
-  const { createProductReturn } = useSelector(
-    (state: ReturnType<RootState>) => state.products
+  const { createServiceReturn } = useSelector(
+    (state: ReturnType<RootState>) => state.services
   )
   const dispatch = useDispatch()
 
@@ -38,18 +38,18 @@ export const UsersAdd: React.FC = () => {
   const [sku, setSku] = React.useState<string | null>(null)
   const [categoryId, setCategoryId] = React.useState<number | null>(null)
 
-  const [loadingCreateProduct, setLoadingCreateProduct] = React.useState(false)
-  const [alertCreateProduct, setAlertCreateProduct] = React.useState(false)
+  const [loadingCreateService, setLoadingCreateService] = React.useState(false)
+  const [alertCreateService, setAlertCreateService] = React.useState(false)
 
-  async function addNewProduct() {
-    if (loadingCreateProduct) {
+  async function addNewService() {
+    if (loadingCreateService) {
       return
     }
 
     if (!!name && !!price) {
-      setLoadingCreateProduct(true)
+      setLoadingCreateService(true)
       await dispatch(
-        createProduct({
+        createService({
           name,
           description,
           stock: inStock,
@@ -59,8 +59,8 @@ export const UsersAdd: React.FC = () => {
           price
         })
       )
-      setAlertCreateProduct(true)
-      setLoadingCreateProduct(false)
+      setAlertCreateService(true)
+      setLoadingCreateService(false)
     }
   }
 
@@ -92,13 +92,13 @@ export const UsersAdd: React.FC = () => {
                   variant="h5"
                   sx={{ fontWeight: 'bold' }}
                 >
-                  Criar um novo produto
+                  Criar um novo servico
                 </Typography>
               </Box>
             </Box>
             <Grid container spacing={3}>
               <Grid item xs={8}>
-                <ProductsAddFormEdit
+                <ServicesAddFormEdit
                   name={name}
                   setName={setName}
                   description={description}
@@ -106,7 +106,7 @@ export const UsersAdd: React.FC = () => {
                 />
               </Grid>
               <Grid item xs={4}>
-                <ProductsAddFormEdit2
+                <ServicesAddFormEdit2
                   inStock={inStock}
                   setInStock={setInStock}
                   sku={sku}
@@ -114,15 +114,15 @@ export const UsersAdd: React.FC = () => {
                   categoryId={categoryId}
                   setCategoryId={setCategoryId}
                 />
-                <ProductsAddFormEdit3 price={price} setPrice={setPrice} />
+                <ServicesAddFormEdit3 price={price} setPrice={setPrice} />
                 <Button
                   variant="contained"
                   size="large"
                   fullWidth
-                  onClick={addNewProduct}
+                  onClick={addNewService}
                   disabled={!(!!name && !!price)}
                 >
-                  Criar produto
+                  Criar servico
                 </Button>
               </Grid>
             </Grid>
@@ -130,15 +130,15 @@ export const UsersAdd: React.FC = () => {
           <Copyright />
         </Box>
       </Box>
-      <Snackbar open={alertCreateProduct} autoHideDuration={500}>
+      <Snackbar open={alertCreateService} autoHideDuration={500}>
         <Alert
-          onClose={() => setAlertCreateProduct(false)}
-          severity={createProductReturn.success ? 'success' : 'error'}
+          onClose={() => setAlertCreateService(false)}
+          severity={createServiceReturn.success ? 'success' : 'error'}
           sx={{ width: '100%' }}
         >
-          {createProductReturn.success
-            ? 'Produto criado com sucesso!'
-            : 'Erro ao criar o produto!'}
+          {createServiceReturn.success
+            ? 'Serviço criado com sucesso!'
+            : 'Erro ao criar o servico!'}
         </Alert>
       </Snackbar>
     </>
