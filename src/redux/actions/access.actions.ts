@@ -3,56 +3,34 @@ import { ActionCreator, Dispatch } from 'redux'
 
 import {
   AccessActionTypes,
-  GET_LOG_IN,
-  GetLogInParametersService,
-  GetLogInParametersReducer,
-  GET_LOCAL_STORAGE,
-  ACCESS_SIGN_UP,
-  AccessSignUpParameters,
   GET_LOG_OUT,
   AccessResetPasswordParameters,
   ACCESS_RESET_PASSWORD,
-  AccessActionIsAuthenticatedParameters,
-  ACCESS_GET_IS_AUTHENTICATED,
   AccessResetPasswordVerifyCodeParameters,
   ACCESS_RESET_PASSWORD_VERIFY_CODE,
   AccessResetPasswordChangePasswordParameters,
   ACCESS_RESET_PASSWORD_CHANGE_PASSWORD,
-  ACCESS_RESET_PASSWORD_FINISHED
+  ACCESS_RESET_PASSWORD_FINISHED,
+  ReduxAccessGetLoginReducerPayload,
+  REDUX_ACCESS_GET_LOGIN,
+  ReduxAccessGetLoginServiceParameters,
+  ReduxAccessGetStorageDataReducerPayload,
+  REDUX_ACCESS_GET_STORAGE_DATA,
+  ReduxAccessGetStorageDataUser,
+  ReduxAccessCheckAuthenticationReducerPayload,
+  REDUX_ACCESS_CHECK_AUTHENTICATION,
+  AlertActionTypes
 } from '../types'
 import { accessService } from '../../services'
 import { api } from '../../services/api'
 import { RootState } from '../store'
 import { setAlert } from './alerts.actions'
 
-const getLogInSuccess: ActionCreator<AccessActionTypes> = (
-  success: GetLogInParametersReducer
-) => {
-  return { type: GET_LOG_IN, payload: { success, failure: null } }
-}
-const getLogInFailure: ActionCreator<AccessActionTypes> = () => {
-  return { type: GET_LOG_IN, payload: { success: null, failure: true } }
-}
-const getLocalStorageSuccess: ActionCreator<AccessActionTypes> = (
-  success: GetLogInParametersReducer
-) => {
-  return { type: GET_LOCAL_STORAGE, payload: { success, failure: null } }
-}
-const getLocalStorageFailure: ActionCreator<AccessActionTypes> = () => {
-  return {
-    type: GET_LOCAL_STORAGE,
-    payload: { success: null, failure: true }
-  }
-}
 const getLogOutSuccess: ActionCreator<AccessActionTypes> = () => {
   return { type: GET_LOG_OUT, payload: { success: true, failure: null } }
 }
 const getLogOutFailure: ActionCreator<AccessActionTypes> = () => {
   return { type: GET_LOG_OUT, payload: { success: null, failure: true } }
-}
-
-const accessActionSignUp: ActionCreator<AccessActionTypes> = () => {
-  return { type: ACCESS_SIGN_UP }
 }
 
 const accessActionResetPassword: ActionCreator<AccessActionTypes> = () => {
@@ -86,94 +64,12 @@ const accessActionResetPasswordFinished: ActionCreator<
   return { type: ACCESS_RESET_PASSWORD_FINISHED }
 }
 
-const accessActionGetIsAuthenticated: ActionCreator<AccessActionTypes> = (
-  payload: AccessActionIsAuthenticatedParameters
-) => {
-  return { type: ACCESS_GET_IS_AUTHENTICATED, payload }
-}
 const accessActionGetIsAuthenticatedFailure: ActionCreator<
   AccessActionTypes
 > = () => {
   return { type: ACCESS_GET_IS_AUTHENTICATED, payload: null }
 }
 
-export function getLogIn({ email, password }: GetLogInParametersService) {
-  return async dispatch => {
-    try {
-      const { data } = await accessService.getLogIn({ email, password })
-      console.log(data)
-      const token = data?.success?.token
-      const user = {
-        id: data?.success?.user?.id,
-        displayName: data?.success?.user?.display_name
-      }
-
-      api.defaults.headers.common.Authorization = `Bearer ${token}`
-
-      await localStorage.setItem('@PosicionamentoAuth:token', token)
-      await localStorage.setItem(
-        '@PosicionamentoAuth:user',
-        JSON.stringify(user)
-      )
-
-      dispatch(getLogInSuccess({ token, user }))
-    } catch (err) {
-      console.log(err)
-
-      let status: number | null = null
-
-      if (axios.isAxiosError(err)) {
-        err as AxiosError
-        status = err.response?.status ?? null
-      }
-
-      switch (status) {
-        case 404:
-          dispatch(
-            dispatch(
-              setAlert({ type: 'error', message: 'Usuário não encontrado!' })
-            )
-          )
-          break
-        case 403:
-          dispatch(
-            dispatch(setAlert({ type: 'warning', message: 'Senha incorreta.' }))
-          )
-          break
-        default:
-          dispatch(
-            setAlert({ type: 'error', message: 'Erro ao desconhecido...' })
-          )
-          break
-      }
-
-      getLogInFailure()
-    }
-  }
-}
-export function getLocalStorage() {
-  return async dispatch => {
-    try {
-      let token: string | null = null
-      let user: { id: number; displayName: string } | null = null
-      const storageToken = await localStorage.getItem(
-        '@PosicionamentoAuth:token'
-      )
-      const storageUser = await localStorage.getItem('@PosicionamentoAuth:user')
-      if (storageToken && storageUser) {
-        token = storageToken
-        user = JSON.parse(storageUser)
-
-        api.defaults.headers.common.Authorization = `Bearer ${token}`
-      }
-
-      dispatch(getLocalStorageSuccess({ token, user }))
-    } catch (err) {
-      console.log(err)
-      getLocalStorageFailure()
-    }
-  }
-}
 export function getLogOut() {
   return async (dispatch: Dispatch) => {
     try {
@@ -186,42 +82,6 @@ export function getLogOut() {
     } catch (err) {
       console.log(err)
       getLogOutFailure()
-    }
-  }
-}
-
-export function accessSignUp({
-  userLogin,
-  userPass,
-  userEmail,
-  displayName
-}: AccessSignUpParameters) {
-  return async dispatch => {
-    try {
-      await accessService.accessSignUp({
-        userLogin,
-        userPass,
-        userEmail,
-        displayName
-      })
-
-      dispatch(accessActionSignUp())
-    } catch (err) {
-      let status: number | null = null
-
-      if (axios.isAxiosError(err)) {
-        err as AxiosError
-        status = err.response?.status ?? null
-      }
-
-      switch (status) {
-        case 409:
-          dispatch(setNotification('signUp.error.409'))
-          break
-        default:
-          dispatch(setNotification('index.error.0'))
-          break
-      }
     }
   }
 }
@@ -321,18 +181,158 @@ export const accessResetPasswordFinished = () => {
   }
 }
 
-export function accessGetIsAuthenticated() {
-  return async dispatch => {
+const reduxAccessGetStorageDataAction: ActionCreator<AccessActionTypes> = (
+  payload: ReduxAccessGetStorageDataReducerPayload
+) => {
+  return { type: REDUX_ACCESS_GET_STORAGE_DATA, payload }
+}
+export function reduxAccessGetStorageDataFunction() {
+  return async (dispatch: Dispatch<AccessActionTypes>) => {
     try {
-      console.log('accessGetIsAuthenticated')
-      await accessService.getIsAuthenticated()
+      let token: string | null = null
+      let user: ReduxAccessGetStorageDataUser | null = null
+      const storageToken = await localStorage.getItem(
+        '@DifusaoWebSiteDashboard:token'
+      )
+      const storageUser = await localStorage.getItem(
+        '@DifusaoWebSiteDashboard:user'
+      )
+      if (storageToken && storageUser) {
+        token = storageToken
+        user = JSON.parse(storageUser)
 
-      dispatch(accessActionGetIsAuthenticated({ isAuthenticated: true }))
+        api.defaults.headers.common.Authorization = `Bearer ${token}`
+      }
+
+      console.log({ token, user })
+
+      dispatch(
+        reduxAccessGetStorageDataAction({
+          success: { token, user },
+          failure: null
+        })
+      )
     } catch (err) {
-      console.log('accessGetIsAuthenticatedFailure')
-      delete api.defaults.headers.Authorization
-      await AsyncStorage.clear()
-      dispatch(accessActionGetIsAuthenticatedFailure())
+      console.log(err)
+      setAlert({ type: 'error', message: 'Erro desconhecido!' })
+      dispatch(
+        reduxAccessGetStorageDataAction({
+          success: null,
+          failure: { status: 0 }
+        })
+      )
+    }
+  }
+}
+
+const reduxAccessCheckAuthenticationAction: ActionCreator<AccessActionTypes> = (
+  payload: ReduxAccessCheckAuthenticationReducerPayload
+) => {
+  return { type: REDUX_ACCESS_CHECK_AUTHENTICATION, payload }
+}
+export function reduxAccessCheckAuthenticationFunction() {
+  return async (dispatch: Dispatch<AccessActionTypes>) => {
+    try {
+      const { data } = await accessService.checkAuthentication()
+      console.log(data)
+
+      // dispatch(
+      //   reduxAccessCheckAuthenticationAction({
+      //     success: { authenticated: true },
+      //     failure: null
+      //   })
+      // )
+    } catch (err) {
+      console.log(err)
+      let status: number | null = null
+
+      if (axios.isAxiosError(err)) {
+        err as AxiosError
+        status = err.response?.status ?? null
+      }
+
+      delete api.defaults.headers.common.Authorization
+      await localStorage.clear()
+
+      if (status !== 401) {
+        setAlert({ type: 'error', message: 'Erro desconhecido!' })
+      }
+
+      dispatch(
+        reduxAccessCheckAuthenticationAction({
+          success: null,
+          failure: { status }
+        })
+      )
+    }
+  }
+}
+
+const reduxAccessGetLoginAction: ActionCreator<AccessActionTypes> = (
+  payload: ReduxAccessGetLoginReducerPayload
+) => {
+  return { type: REDUX_ACCESS_GET_LOGIN, payload }
+}
+type reduxAccessGetLoginFunctionType = ReturnType<
+  typeof AccessActionTypes | typeof AlertActionTypes
+>
+export function reduxAccessGetLoginFunction(
+  parameters: ReduxAccessGetLoginServiceParameters
+) {
+  return async (dispatch: Dispatch<reduxAccessGetLoginFunctionType>) => {
+    try {
+      const { data } = await accessService.getLogin(parameters)
+      const token = data?.success?.token
+      const user = {
+        id: data?.success?.user?.id,
+        name: data?.success?.user?.name
+      }
+
+      api.defaults.headers.common.Authorization = `Bearer ${token}`
+
+      await localStorage.setItem('@DifusaoWebSiteDashboard:token', token)
+      await localStorage.setItem(
+        '@DifusaoWebSiteDashboard:user',
+        JSON.stringify(user)
+      )
+
+      dispatch(
+        reduxAccessGetLoginAction({
+          success: { token, user },
+          failure: null
+        })
+      )
+    } catch (err) {
+      console.log(err)
+      let status: number | null = null
+
+      if (axios.isAxiosError(err)) {
+        err as AxiosError
+        status = err.response?.status ?? null
+      }
+
+      switch (status) {
+        case 404:
+          dispatch(
+            setAlert({ type: 'error', message: 'Usuário não encontrado!' })
+          )
+          break
+        case 403:
+          dispatch(setAlert({ type: 'warning', message: 'Senha incorreta.' }))
+          break
+        default:
+          dispatch(
+            setAlert({ type: 'error', message: 'Erro ao desconhecido...' })
+          )
+          break
+      }
+
+      dispatch(
+        reduxAccessGetLoginAction({
+          success: null,
+          failure: { status }
+        })
+      )
     }
   }
 }

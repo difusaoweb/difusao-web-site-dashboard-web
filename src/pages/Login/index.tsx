@@ -7,27 +7,22 @@ import {
   Container,
   Paper
 } from '@mui/material'
-import { useDispatch } from 'react-redux'
 
+import { useAppDispatch, reduxAccessGetLoginFunction } from '../../redux'
 import { Copyright } from '../../components/atoms/Copyright'
-import { getLogIn } from '../../redux'
 
-export function SignIn() {
-  const dispatch = useDispatch()
-  const [isLoadingSignIn, setIsLoadingSignIn] = React.useState(false)
-  const [email, setEmail] = React.useState<string | null>(
-    'johnsistema@gmail.com'
-  )
-  const [password, setPassword] = React.useState<string | null>(
-    'johnsistemaPASS123'
-  )
+export const Login = () => {
+  const dispatch = useAppDispatch()
 
-  async function handleSignIn() {
+  const [email, setEmail] = React.useState<string | null>(null)
+  const [password, setPassword] = React.useState<string | null>(null)
+  const [isLoadingGetLogin, setIsLoadingGetLogin] = React.useState(false)
+
+  async function handleGetLogin() {
     if (email && password) {
-      setIsLoadingSignIn(true)
-      await dispatch(getLogIn({ email, password }))
-
-      setIsLoadingSignIn(false)
+      setIsLoadingGetLogin(true)
+      await dispatch(reduxAccessGetLoginFunction({ email, password }))
+      setIsLoadingGetLogin(false)
     }
   }
 
@@ -56,7 +51,7 @@ export function SignIn() {
             }}
           >
             <Typography component="h3" variant="body1">
-              John Sistema
+              Difusão Web
             </Typography>
             <Typography component="h1" variant="h5">
               Fazer login
@@ -66,31 +61,35 @@ export function SignIn() {
                 margin="normal"
                 required
                 fullWidth
-                label="Nome de usuário ou email"
+                label="Email"
                 name="email"
                 autoComplete="email"
                 autoFocus
-                onChange={e => setEmail(String(e.target.value))}
-                value={email}
+                onChange={e =>
+                  setEmail(e.target.value ? String(e.target.value) : null)
+                }
+                value={email ?? ''}
               />
               <TextField
                 margin="normal"
                 required
                 fullWidth
-                name="passwordword"
+                name="password"
                 label="Senha"
                 type="password"
                 autoComplete="current-password"
-                onChange={e => setPassword(String(e.target.value))}
-                value={password}
+                onChange={e =>
+                  setPassword(e.target.value ? String(e.target.value) : null)
+                }
+                value={password ?? ''}
               />
               <Button
                 type="submit"
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
-                onClick={handleSignIn}
-                disabled={isLoadingSignIn || !email || !password}
+                onClick={handleGetLogin}
+                disabled={isLoadingGetLogin || !email || !password}
               >
                 Acessar
               </Button>

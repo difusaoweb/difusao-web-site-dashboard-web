@@ -18,8 +18,7 @@ export const Copyright = (props: any) => {
         my: 2
       }}
     >
-      &copy; {new Date().getFullYear()} Jonh Sistema &bull; Desenvolvido
-      por&nbsp;
+      &copy; {new Date().getFullYear()}&nbsp;
       <Link
         color="inherit"
         href="https://difusaoweb.com"
