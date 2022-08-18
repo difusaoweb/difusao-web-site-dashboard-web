@@ -3,7 +3,8 @@ import { AxiosResponse } from 'axios'
 import { api } from './api'
 import {
   CreateServiceData,
-  ReduxServicesGetServiceListServiceParameters
+  ReduxServicesGetServiceListServiceParameters,
+  ReduxServicesDeleteServiceListServiceParameters
 } from '../redux'
 
 async function createService({
@@ -28,10 +29,6 @@ async function createService({
   })
 }
 
-async function deleteServices(ids: number[]): Promise<AxiosResponse> {
-  return await api.get('/services/delete', { params: { service_ids: ids } })
-}
-
 async function getServiceList({
   page,
   perPage
@@ -41,4 +38,16 @@ async function getServiceList({
   })
 }
 
-export const servicesService = { getServiceList, createService, deleteServices }
+async function deleteServiceList({
+  servicesId
+}: ReduxServicesDeleteServiceListServiceParameters): Promise<AxiosResponse> {
+  return await api.get('/services/delete', {
+    params: { services_id: servicesId }
+  })
+}
+
+export const servicesService = {
+  createService,
+  getServiceList,
+  deleteServiceList
+}

@@ -33,10 +33,10 @@ import {
 } from '@mui/material'
 
 import {
-  deleteServices,
   ServiceData,
   useAppSelector,
   reduxServicesGetServiceListFunction,
+  reduxServicesDeleteServiceListFunction,
   useAppDispatch
 } from '../../../redux'
 
@@ -51,7 +51,6 @@ function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
 }
 
 type Order = 'asc' | 'desc'
-
 function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key
@@ -68,6 +67,7 @@ function stableSort<T>(
   array: readonly T[],
   comparator: (a: T, b: T) => number
 ) {
+  console.log('table reload')
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0])
@@ -85,7 +85,6 @@ interface HeadCell {
   numeric?: boolean
   noShort?: true
 }
-
 const headCells: readonly HeadCell[] = [
   {
     id: 'image',
@@ -117,7 +116,6 @@ interface EnhancedTableProps {
   orderBy: string
   rowCount: number
 }
-
 function EnhancedTableHead(props: EnhancedTableProps) {
   const {
     onSelectAllClick,
@@ -182,18 +180,15 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 interface EnhancedTableToolbarProps {
   loading: boolean
   numSelected: number
-  onGetServiceList(): void
-  handleRowCellDelete(ids: number[]): void
-  selecteds: number[]
+  handleReloadTable(): void
+  handleDeleteAllSelectedRows(): void
 }
-
 const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   const {
     loading,
     numSelected,
-    onGetServiceList,
-    handleRowCellDelete,
-    selecteds
+    handleReloadTable,
+    handleDeleteAllSelectedRows
   } = props
 
   return (
@@ -231,7 +226,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
       )}
       {numSelected > 0 ? (
         <Tooltip title="Delete">
-          <IconButton onClick={() => handleRowCellDelete(selecteds)}>
+          <IconButton onClick={() => handleDeleteAllSelectedRows()}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
@@ -240,7 +235,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           {loading ? (
             <CircularProgress size={24} sx={{ margin: 1 }} />
           ) : (
-            <IconButton onClick={onGetServiceList}>
+            <IconButton onClick={handleReloadTable}>
               <ReplayIcon />
             </IconButton>
           )}
@@ -253,16 +248,16 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
 export const ServiceList = () => {
   const {
     getServiceListServices,
-    getServiceListLastPage,
     getServiceListTotal,
-    deletedServices
+    deleteServiceListDeleted
   } = useAppSelector(state => state.services)
   const theme = useTheme()
   const dispatch = useAppDispatch()
 
+  const [isOnGetServiceList, setIsOnGetServiceList] = React.useState(true)
   const [isLoadingGetServiceList, setIsLoadingGetServiceList] =
     React.useState(false)
-  const [loadingDeleteServices, setLoadingDeleteServices] =
+  const [isLoadingDeleteServiceList, setIsLoadingDeleteServiceList] =
     React.useState(false)
   const [rows, setRows] = React.useState<ServiceData[] | null>(null)
   const [order, setOrder] = React.useState<Order>('desc')
@@ -274,9 +269,21 @@ export const ServiceList = () => {
   const [pageQuery, setPageQuery] = React.useState(1)
   const [pageRows, setPageRows] = React.useState(0)
   const [perPageRows, setPerPageRows] = React.useState(3)
-
   const [rowCellAnchorEl, setRowCellAnchorEl] = React.useState<any | null>(null)
+  const [countRows, setCountRows] = React.useState(0)
+
   const rowCellOpen = Boolean(rowCellAnchorEl)
+  const emptyRows =
+    pageRows > 0
+      ? Math.max(0, (1 + pageRows) * perPageRows - (rows?.length ?? 0))
+      : 0
+
+  function isSelected(id: number) {
+    if (selecteds) {
+      return selecteds.indexOf(id) !== -1
+    }
+    return false
+  }
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
@@ -298,7 +305,22 @@ export const ServiceList = () => {
     setSelecteds(null)
   }
 
-  function handleRowCellCheckbox(id: number) {
+  function handleReloadTable() {
+    setPageQuery(1)
+    setPageRows(0)
+    setSelecteds(null)
+    setIsOnGetServiceList(true)
+  }
+
+  function handleDeleteAllSelectedRows() {
+    console.log('handleDeleteAllSelectedRows')
+
+    setSelectedsDestroy(selecteds)
+    setSelecteds(null)
+    handleRowMenuClose()
+  }
+
+  function handleRowCheckbox(id: number) {
     if (selecteds) {
       const selectedIndex = selecteds.indexOf(id)
       let newSelecteds: number[] = []
@@ -321,45 +343,25 @@ export const ServiceList = () => {
     }
   }
 
-  function isSelected(id: number) {
-    if (selecteds) {
-      return selecteds.indexOf(id) !== -1
-    }
-    return false
-  }
-
-  const emptyRows =
-    pageRows > 0
-      ? Math.max(0, (1 + pageRows) * perPageRows - (rows?.length ?? 0))
-      : 0
-
-  function handleRowCellClick(index, event) {
+  function handleRowToggleMenu(index, event) {
     setRowCellAnchorEl({ [index]: event.currentTarget })
     setSelecteds(null)
   }
-  function handleRowCellClose() {
+
+  function handleRowMenuClose() {
     setRowCellAnchorEl(null)
   }
 
-  async function handleRowCellDelete(ids: number[]) {
-    if (loadingDeleteServices) {
-      return
-    }
+  function handleRowMenuDelete(id: number) {
+    console.log('handleRowMenuDelete')
 
-    handleRowCellClose()
-    setSelecteds(null)
-    setSelectedsDestroy(ids)
-    console.log('handleRowCellDelete')
-    console.log(ids)
-
-    setLoadingDeleteServices(true)
-    await dispatch(deleteServices(ids))
-    setLoadingDeleteServices(false)
+    setSelectedsDestroy([id])
+    handleRowMenuClose()
   }
 
-  function handleRowCellEdit(id: number) {
-    handleRowCellClose()
-    console.log('handleRowCellEdit')
+  function handleRowMenuEdit(id: number) {
+    handleRowMenuClose()
+    console.log('handleRowMenuEdit')
     console.log(id)
   }
 
@@ -367,7 +369,9 @@ export const ServiceList = () => {
     setPageRows(thePage)
     if (thePage === pageQuery) {
       setPageQuery(page => page + 1)
+      setIsOnGetServiceList(true)
     }
+    setSelecteds(null)
   }
 
   function handleChangeRowsPerPage(thePerPage: number) {
@@ -377,8 +381,9 @@ export const ServiceList = () => {
   }
 
   async function onGetServiceList() {
+    console.log('onGetServiceList')
     if (isLoadingGetServiceList) return
-    setSelecteds(null)
+    setIsOnGetServiceList(false)
 
     setIsLoadingGetServiceList(true)
     await dispatch(
@@ -390,40 +395,59 @@ export const ServiceList = () => {
     setIsLoadingGetServiceList(false)
   }
 
+  async function onDeleteServiceList() {
+    if (isLoadingDeleteServiceList || !selectedsDestroy) return
+
+    setIsLoadingDeleteServiceList(true)
+    await dispatch(
+      reduxServicesDeleteServiceListFunction({ servicesId: selectedsDestroy })
+    )
+    setIsLoadingDeleteServiceList(false)
+  }
+
   console.log('renderizou')
+  console.log(rows)
 
   React.useEffect(() => {
-    onGetServiceList()
-  }, [pageQuery, perPageRows])
+    if (isOnGetServiceList) {
+      onGetServiceList()
+    }
+  }, [isOnGetServiceList])
 
   React.useEffect(() => {
     if (getServiceListServices) {
       setRows(getServiceListServices)
     }
+    setCountRows(getServiceListTotal ?? 0)
   }, [getServiceListServices])
 
-  // React.useEffect(() => {
-  //   if (deletedServices) {
-  //     if (!!rows && !!selectedsDestroy) {
-  //       setRows(
-  //         rows.filter(
-  //           row => selectedsDestroy.filter(id => id === row.id).length < 1
-  //         )
-  //       )
-  //       setSelectedsDestroy(null)
-  //     }
-  //   }
-  // }, [deletedServices])
+  React.useEffect(() => {
+    if (selectedsDestroy) {
+      onDeleteServiceList()
+    }
+  }, [selectedsDestroy])
+  React.useEffect(() => {
+    if (deleteServiceListDeleted) {
+      if (!rows || !selectedsDestroy) return
+
+      setRows(
+        rows.filter(
+          row => selectedsDestroy.filter(id => id === row.id).length < 1
+        )
+      )
+      setCountRows(count => count - selectedsDestroy.length)
+      setSelectedsDestroy(null)
+    }
+  }, [deleteServiceListDeleted])
 
   return (
     <>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar
           numSelected={selecteds?.length ?? 0}
-          loading={isLoadingGetServiceList}
-          onGetServiceList={onGetServiceList}
-          handleRowCellDelete={handleRowCellDelete}
-          selecteds={selecteds ?? []}
+          loading={isLoadingGetServiceList || isLoadingDeleteServiceList}
+          handleReloadTable={handleReloadTable}
+          handleDeleteAllSelectedRows={handleDeleteAllSelectedRows}
         />
         <TableContainer>
           <Table
@@ -445,9 +469,7 @@ export const ServiceList = () => {
                   .slice(
                     pageRows * perPageRows,
                     pageRows * perPageRows +
-                      (perPageRows === -1
-                        ? getServiceListTotal ?? 0
-                        : perPageRows)
+                      (perPageRows === -1 ? countRows : perPageRows)
                   )
                   .map((row, index) => {
                     const isItemSelected = isSelected(row.id)
@@ -473,7 +495,11 @@ export const ServiceList = () => {
                             inputProps={{
                               'aria-labelledby': labelId
                             }}
-                            onClick={() => handleRowCellCheckbox(row.id)}
+                            onClick={() => handleRowCheckbox(row.id)}
+                            disabled={
+                              isLoadingGetServiceList ||
+                              isLoadingDeleteServiceList
+                            }
                           />
                         </TableCell>
                         <TableCell>
@@ -495,7 +521,11 @@ export const ServiceList = () => {
                             }
                             aria-haspopup="true"
                             aria-expanded={rowCellOpen ? 'true' : undefined}
-                            onClick={e => handleRowCellClick(index, e)}
+                            onClick={e => handleRowToggleMenu(index, e)}
+                            disabled={
+                              isLoadingGetServiceList ||
+                              isLoadingDeleteServiceList
+                            }
                           >
                             <MoreVertIcon />
                           </IconButton>
@@ -505,13 +535,13 @@ export const ServiceList = () => {
                             open={Boolean(
                               rowCellAnchorEl && rowCellAnchorEl[index]
                             )}
-                            onClose={handleRowCellClose}
+                            onClose={handleRowMenuClose}
                             MenuListProps={{
                               'aria-labelledby': 'rowCellBasicButton'
                             }}
                           >
                             <MenuItem
-                              onClick={() => handleRowCellDelete([row.id])}
+                              onClick={() => handleRowMenuDelete(row.id)}
                             >
                               <ListItemIcon>
                                 <DeleteIcon
@@ -525,7 +555,7 @@ export const ServiceList = () => {
                                 Deletar
                               </ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={() => handleRowCellEdit(row.id)}>
+                            <MenuItem onClick={() => handleRowMenuEdit(row.id)}>
                               <ListItemIcon>
                                 <EditIcon fontSize="small" />
                               </ListItemIcon>
@@ -543,10 +573,6 @@ export const ServiceList = () => {
                 )}
               </TableBody>
             )}
-            {/* <p>{pageRows}</p>
-            <p>{perPageRows}</p>
-            <p>{JSON.stringify(rows)}</p>
-            <p>{JSON.stringify(getServiceListServices)}</p> */}
           </Table>
         </TableContainer>
         <TablePagination
@@ -554,7 +580,7 @@ export const ServiceList = () => {
           component="div"
           page={pageRows}
           rowsPerPage={perPageRows}
-          count={getServiceListTotal ?? 0}
+          count={countRows}
           onPageChange={(e, page) => handleChangePage(page)}
           onRowsPerPageChange={e =>
             handleChangeRowsPerPage(Number(e.target.value))

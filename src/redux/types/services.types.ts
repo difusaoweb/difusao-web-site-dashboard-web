@@ -31,9 +31,17 @@ export interface ReduxServicesGetServiceListReducerPayload {
   failure: ErrorStatus | null
 }
 
-export const CREATE_SERVICE = 'CREATE_SERVICE'
-export const DELETE_SERVICES = 'DELETE_SERVICES'
+export interface ReduxServicesDeleteServiceListServiceParameters {
+  servicesId: number[]
+}
+export interface ReduxServicesDeleteServiceListReducerPayload {
+  success: {
+    deleted: boolean
+  } | null
+  failure: ErrorStatus | null
+}
 
+export const CREATE_SERVICE = 'CREATE_SERVICE'
 interface CreateServicesAction {
   type: typeof CREATE_SERVICE
   payload: {
@@ -42,15 +50,17 @@ interface CreateServicesAction {
   }
 }
 
-interface DeleteServicesAction {
-  type: typeof DELETE_SERVICES
-  payload: true | null
-}
-
 export const REDUX_SERVICES_GET_SERVICE_LIST = 'REDUX_SERVICES_GET_SERVICE_LIST'
 interface ReduxServicesGetServiceListReducer {
   type: typeof REDUX_SERVICES_GET_SERVICE_LIST
   payload: ReduxServicesGetServiceListReducerPayload
+}
+
+export const REDUX_SERVICES_DELETE_SERVICE_LIST =
+  'REDUX_SERVICES_DELETE_SERVICE_LIST'
+interface ReduxServicesDeleteServiceListReducer {
+  type: typeof REDUX_SERVICES_DELETE_SERVICE_LIST
+  payload: ReduxServicesDeleteServiceListReducerPayload
 }
 
 export interface ServiceState {
@@ -58,15 +68,17 @@ export interface ServiceState {
     success: { service_id: number } | null
     failure: true | null
   }
-  deletedServices: true | null
 
   getServiceListServices: ServiceData[] | null
   getServiceListLastPage: number | null
   getServiceListTotal: number | null
   getServiceListError: ErrorStatus | null
+
+  deleteServiceListDeleted: boolean | null
+  deleteServiceListError: ErrorStatus | null
 }
 
 export type ServiceActionTypes =
   | CreateServicesAction
-  | DeleteServicesAction
   | ReduxServicesGetServiceListReducer
+  | ReduxServicesDeleteServiceListReducer
