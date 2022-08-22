@@ -3,37 +3,18 @@ import { ActionCreator, Dispatch } from 'redux'
 
 import {
   ServiceActionTypes,
-  CREATE_SERVICE,
-  CreateServiceData,
   ReduxServicesGetServiceListReducerPayload,
   REDUX_SERVICES_GET_SERVICE_LIST,
   ReduxServicesGetServiceListServiceParameters,
   ReduxServicesDeleteServiceListReducerPayload,
   REDUX_SERVICES_DELETE_SERVICE_LIST,
-  ReduxServicesDeleteServiceListServiceParameters
+  ReduxServicesDeleteServiceListServiceParameters,
+  ReduxServicesCreateServiceReducerPayload,
+  REDUX_SERVICES_CREATE_SERVICE,
+  ReduxServicesCreateServiceServiceParameters
 } from '../types'
 import { servicesService } from '../../services'
 import { setAlert } from './alerts.actions'
-
-const createServiceSuccess: ActionCreator<ServiceActionTypes> = (success: {
-  service_id: number
-}) => {
-  return { type: CREATE_SERVICE, payload: { success, failure: null } }
-}
-const createServiceFailure: ActionCreator<ServiceActionTypes> = () => {
-  return { type: CREATE_SERVICE, payload: { success: null, failure: true } }
-}
-export function createService(service: CreateServiceData) {
-  return async dispatch => {
-    try {
-      const { data } = await servicesService.createService(service)
-      dispatch(createServiceSuccess(data?.success))
-    } catch (err) {
-      console.log(err)
-      dispatch(createServiceFailure())
-    }
-  }
-}
 
 const reduxServicesGetServiceListAction: ActionCreator<ServiceActionTypes> = (
   payload: ReduxServicesGetServiceListReducerPayload
@@ -73,9 +54,6 @@ export function reduxServicesGetServiceListFunction({
 
       switch (status) {
         case 404:
-          dispatch(
-            setAlert({ type: 'info', message: 'Serviços não encontrado!' })
-          )
           break
         default:
           dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
@@ -100,19 +78,19 @@ const reduxServicesDeleteServiceListAction: ActionCreator<
 type reduxServicesDeleteServiceListFunctionType = ReturnType<
   typeof ServiceActionTypes | typeof AlertActionTypes
 >
-export function reduxServicesDeleteServiceListFunction(
-  parameters: ReduxServicesDeleteServiceListServiceParameters
-) {
+export function reduxServicesDeleteServiceListFunction({
+  servicesId
+}: ReduxServicesDeleteServiceListServiceParameters) {
   return async (
     dispatch: Dispatch<reduxServicesDeleteServiceListFunctionType>
   ) => {
     try {
-      const { data } = await servicesService.deleteServiceList(parameters)
+      const { data } = await servicesService.deleteServiceList({ servicesId })
       const deleted = data?.success?.deleted
 
       dispatch(
         reduxServicesDeleteServiceListAction({
-          success: { deleted },
+          success: { deleted, servicesId },
           failure: null
         })
       )
@@ -133,6 +111,53 @@ export function reduxServicesDeleteServiceListFunction(
 
       dispatch(
         reduxServicesDeleteServiceListAction({
+          success: null,
+          failure: { status }
+        })
+      )
+    }
+  }
+}
+
+const reduxServicesCreateServiceAction: ActionCreator<ServiceActionTypes> = (
+  payload: ReduxServicesCreateServiceReducerPayload
+) => {
+  return { type: REDUX_SERVICES_CREATE_SERVICE, payload }
+}
+type reduxServicesCreateServiceFunctionType = ReturnType<
+  typeof ServiceActionTypes | typeof AlertActionTypes
+>
+export function reduxServicesCreateServiceFunction(
+  parameters: ReduxServicesCreateServiceServiceParameters
+) {
+  return async (dispatch: Dispatch<reduxServicesCreateServiceFunctionType>) => {
+    try {
+      const { data } = await servicesService.createService(parameters)
+      const serviceId = data?.success?.service_id
+
+      dispatch(
+        reduxServicesCreateServiceAction({
+          success: { serviceId },
+          failure: null
+        })
+      )
+    } catch (err) {
+      console.log(err)
+      let status: number | null = null
+
+      if (axios.isAxiosError(err)) {
+        err as AxiosError
+        status = err.response?.status ?? null
+      }
+
+      switch (status) {
+        default:
+          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          break
+      }
+
+      dispatch(
+        reduxServicesCreateServiceAction({
           success: null,
           failure: { status }
         })

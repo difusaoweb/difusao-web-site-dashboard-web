@@ -19,11 +19,10 @@ export const Login = () => {
   const [isLoadingGetLogin, setIsLoadingGetLogin] = React.useState(false)
 
   async function handleGetLogin() {
-    if (email && password) {
-      setIsLoadingGetLogin(true)
-      await dispatch(reduxAccessGetLoginFunction({ email, password }))
-      setIsLoadingGetLogin(false)
-    }
+    if (isLoadingGetLogin || !email || !password) return
+    setIsLoadingGetLogin(true)
+    await dispatch(reduxAccessGetLoginFunction({ email, password }))
+    setIsLoadingGetLogin(false)
   }
 
   return (

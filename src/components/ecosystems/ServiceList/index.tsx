@@ -29,7 +29,8 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
-  Avatar
+  Avatar,
+  Link
 } from '@mui/material'
 
 import {
@@ -39,6 +40,7 @@ import {
   reduxServicesDeleteServiceListFunction,
   useAppDispatch
 } from '../../../redux'
+import { ListItemLink } from '../../atoms/ListItemLink'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -67,7 +69,6 @@ function stableSort<T>(
   array: readonly T[],
   comparator: (a: T, b: T) => number
 ) {
-  console.log('table reload')
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0])
@@ -260,6 +261,7 @@ export const ServiceList = () => {
   const [isLoadingDeleteServiceList, setIsLoadingDeleteServiceList] =
     React.useState(false)
   const [rows, setRows] = React.useState<ServiceData[] | null>(null)
+  const [countAllRows, setCountAllRows] = React.useState(0)
   const [order, setOrder] = React.useState<Order>('desc')
   const [orderBy, setOrderBy] = React.useState<keyof ServiceData>('created_at')
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
@@ -270,13 +272,9 @@ export const ServiceList = () => {
   const [pageRows, setPageRows] = React.useState(0)
   const [perPageRows, setPerPageRows] = React.useState(3)
   const [rowCellAnchorEl, setRowCellAnchorEl] = React.useState<any | null>(null)
-  const [countRows, setCountRows] = React.useState(0)
+  const [isSetRowsTable, setIsSetRowsTable] = React.useState(false)
 
   const rowCellOpen = Boolean(rowCellAnchorEl)
-  const emptyRows =
-    pageRows > 0
-      ? Math.max(0, (1 + pageRows) * perPageRows - (rows?.length ?? 0))
-      : 0
 
   function isSelected(id: number) {
     if (selecteds) {
@@ -305,18 +303,20 @@ export const ServiceList = () => {
     setSelecteds(null)
   }
 
-  function handleReloadTable() {
+  function resetTable() {
     setPageQuery(1)
     setPageRows(0)
     setSelecteds(null)
+    setSelectedsDestroy(null)
     setIsOnGetServiceList(true)
   }
 
-  function handleDeleteAllSelectedRows() {
-    console.log('handleDeleteAllSelectedRows')
+  function handleReloadTable() {
+    resetTable()
+  }
 
+  function handleDeleteAllSelectedRows() {
     setSelectedsDestroy(selecteds)
-    setSelecteds(null)
     handleRowMenuClose()
   }
 
@@ -353,16 +353,8 @@ export const ServiceList = () => {
   }
 
   function handleRowMenuDelete(id: number) {
-    console.log('handleRowMenuDelete')
-
     setSelectedsDestroy([id])
     handleRowMenuClose()
-  }
-
-  function handleRowMenuEdit(id: number) {
-    handleRowMenuClose()
-    console.log('handleRowMenuEdit')
-    console.log(id)
   }
 
   function handleChangePage(thePage: number) {
@@ -370,6 +362,9 @@ export const ServiceList = () => {
     if (thePage === pageQuery) {
       setPageQuery(page => page + 1)
       setIsOnGetServiceList(true)
+    } else {
+      setSelectedsDestroy(null)
+      setIsSetRowsTable(true)
     }
     setSelecteds(null)
   }
@@ -378,10 +373,27 @@ export const ServiceList = () => {
     setPerPageRows(thePerPage)
     setPageRows(0)
     setPageQuery(1)
+    setSelecteds(null)
+    setIsOnGetServiceList(true)
+  }
+
+  function setRowsTable() {
+    setIsSetRowsTable(false)
+    if (getServiceListServices) {
+      setRows(
+        getServiceListServices.slice(
+          pageRows * perPageRows,
+          pageRows * perPageRows +
+            (perPageRows === -1 ? rows?.length ?? 0 : perPageRows)
+        )
+      )
+    } else {
+      setRows(null)
+    }
+    setCountAllRows(getServiceListTotal ?? 0)
   }
 
   async function onGetServiceList() {
-    console.log('onGetServiceList')
     if (isLoadingGetServiceList) return
     setIsOnGetServiceList(false)
 
@@ -405,39 +417,30 @@ export const ServiceList = () => {
     setIsLoadingDeleteServiceList(false)
   }
 
-  console.log('renderizou')
-  console.log(rows)
-
+  // Get initial services list
   React.useEffect(() => {
-    if (isOnGetServiceList) {
-      onGetServiceList()
-    }
+    if (!isOnGetServiceList) return
+    onGetServiceList()
   }, [isOnGetServiceList])
 
+  // Set rows where getServiceListServices is change and not null
   React.useEffect(() => {
-    if (getServiceListServices) {
-      setRows(getServiceListServices)
-    }
-    setCountRows(getServiceListTotal ?? 0)
+    if (!getServiceListServices) return
+    setRowsTable()
   }, [getServiceListServices])
+  React.useEffect(() => {
+    if (!isSetRowsTable) return
+    setRowsTable()
+  }, [isSetRowsTable])
 
   React.useEffect(() => {
-    if (selectedsDestroy) {
-      onDeleteServiceList()
-    }
+    if (!selectedsDestroy) return
+    onDeleteServiceList()
   }, [selectedsDestroy])
-  React.useEffect(() => {
-    if (deleteServiceListDeleted) {
-      if (!rows || !selectedsDestroy) return
 
-      setRows(
-        rows.filter(
-          row => selectedsDestroy.filter(id => id === row.id).length < 1
-        )
-      )
-      setCountRows(count => count - selectedsDestroy.length)
-      setSelectedsDestroy(null)
-    }
+  React.useEffect(() => {
+    if (!deleteServiceListDeleted) return
+    resetTable()
   }, [deleteServiceListDeleted])
 
   return (
@@ -463,15 +466,10 @@ export const ServiceList = () => {
               onRequestSort={handleRequestSort}
               rowCount={rows?.length ?? 0}
             />
-            {rows && (
+            {rows ? (
               <TableBody>
-                {stableSort(rows, getComparator(order, orderBy))
-                  .slice(
-                    pageRows * perPageRows,
-                    pageRows * perPageRows +
-                      (perPageRows === -1 ? countRows : perPageRows)
-                  )
-                  .map((row, index) => {
+                {stableSort(rows, getComparator(order, orderBy)).map(
+                  (row, index) => {
                     const isItemSelected = isSelected(row.id)
                     const labelId = `enhanced-table-checkbox-${index}`
 
@@ -510,7 +508,20 @@ export const ServiceList = () => {
                             sx={{ width: 100, height: 100 }}
                           />
                         </TableCell>
-                        <TableCell align="left">{row.title}</TableCell>
+                        <TableCell align="left">
+                          <Link
+                            href={`/servicos/${row.id}`}
+                            sx={{
+                              color: 'unset',
+                              textDecoration: 'none',
+                              '&:hover': {
+                                color: 'primary.main'
+                              }
+                            }}
+                          >
+                            {row.title} - {row.id}
+                          </Link>
+                        </TableCell>
                         <TableCell align="left">{row.description}</TableCell>
                         <TableCell align="left">{rowDateTimeString}</TableCell>
                         <TableCell>
@@ -555,22 +566,27 @@ export const ServiceList = () => {
                                 Deletar
                               </ListItemText>
                             </MenuItem>
-                            <MenuItem onClick={() => handleRowMenuEdit(row.id)}>
-                              <ListItemIcon>
-                                <EditIcon fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText>Editar</ListItemText>
+                            <MenuItem>
+                              <ListItemLink
+                                to={`/servicos/${row.id}`}
+                                primary="Editar"
+                                icon={<EditIcon fontSize="small" />}
+                              />
                             </MenuItem>
                           </Menu>
                         </TableCell>
                       </TableRow>
                     )
-                  })}
-                {emptyRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={6} />
-                  </TableRow>
+                  }
                 )}
+              </TableBody>
+            ) : (
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={999}>
+                    Nenhum serviço encontrado.
+                  </TableCell>
+                </TableRow>
               </TableBody>
             )}
           </Table>
@@ -580,11 +596,17 @@ export const ServiceList = () => {
           component="div"
           page={pageRows}
           rowsPerPage={perPageRows}
-          count={countRows}
+          count={countAllRows}
           onPageChange={(e, page) => handleChangePage(page)}
           onRowsPerPageChange={e =>
             handleChangeRowsPerPage(Number(e.target.value))
           }
+          labelRowsPerPage="Linhas por páginas:"
+          // labelDisplayedRows={({ from, to, count }) => {
+          //   return `${from}–${to} of ${
+          //     count !== -1 ? count : `more than ${to}`
+          //   }`
+          // }}
         />
       </Paper>
     </>

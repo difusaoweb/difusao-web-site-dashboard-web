@@ -1,22 +1,20 @@
 import {
-  CREATE_SERVICE,
   ServiceState,
   ServiceActionTypes,
   REDUX_SERVICES_GET_SERVICE_LIST,
-  REDUX_SERVICES_DELETE_SERVICE_LIST
+  REDUX_SERVICES_DELETE_SERVICE_LIST,
+  REDUX_SERVICES_CREATE_SERVICE
 } from '../types'
 
 const initialState: ServiceState = {
-  createServiceReturn: {
-    success: null,
-    failure: null
-  },
   getServiceListServices: null,
   getServiceListLastPage: null,
   getServiceListTotal: null,
   getServiceListError: null,
   deleteServiceListDeleted: null,
-  deleteServiceListError: null
+  deleteServiceListError: null,
+  createServiceServiceId: null,
+  createServiceError: null
 }
 
 export function servicesReducer(
@@ -24,26 +22,19 @@ export function servicesReducer(
   action: ServiceActionTypes
 ): ServiceState {
   switch (action.type) {
-    case CREATE_SERVICE: {
-      return {
-        ...state,
-        createServiceReturn: action.payload ?? null
-      }
-    }
     case REDUX_SERVICES_GET_SERVICE_LIST: {
       let getServiceListServices = state.getServiceListServices
-      if (action.payload.success?.services) {
+      if (action.payload.success) {
+        const { currentPage, services } = action.payload.success
+
         if (getServiceListServices) {
-          if (action.payload.success?.currentPage === 1) {
-            getServiceListServices = action.payload.success?.services
+          if (currentPage === 1) {
+            getServiceListServices = services
           } else {
-            getServiceListServices = [
-              ...getServiceListServices,
-              ...action.payload.success?.services
-            ]
+            getServiceListServices = [...getServiceListServices, ...services]
           }
         } else {
-          getServiceListServices = action.payload.success?.services
+          getServiceListServices = services
         }
       }
       return {
@@ -51,7 +42,9 @@ export function servicesReducer(
         getServiceListServices,
         getServiceListLastPage: action.payload.success?.lastPage ?? null,
         getServiceListTotal: action.payload.success?.total ?? null,
-        getServiceListError: action.payload.failure
+        getServiceListError: action.payload.failure,
+        deleteServiceListDeleted: null,
+        deleteServiceListError: null
       }
     }
     case REDUX_SERVICES_DELETE_SERVICE_LIST: {
@@ -59,6 +52,13 @@ export function servicesReducer(
         ...state,
         deleteServiceListDeleted: action.payload.success?.deleted ?? null,
         deleteServiceListError: action.payload.failure
+      }
+    }
+    case REDUX_SERVICES_CREATE_SERVICE: {
+      return {
+        ...state,
+        createServiceServiceId: action.payload.success?.serviceId ?? null,
+        createServiceError: action.payload.failure
       }
     }
     default:

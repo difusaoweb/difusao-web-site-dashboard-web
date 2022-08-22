@@ -4,14 +4,17 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemButton,
-  Collapse
+  Collapse,
+  listItemIconClasses
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,
   Apps as AppsIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
-  People as PeopleIcon
+  People as PeopleIcon,
+  CameraAlt as CameraAltIcon,
+  Build as BuildIcon
 } from '@mui/icons-material'
 import { useLocation } from 'react-router-dom'
 
@@ -24,8 +27,15 @@ export const ListItems = () => {
   >(null)
   const [itemCollapsed, setItemCollapsed] = React.useState<string | null>(null)
 
+  const listItemIconClasses = [
+    { icon: <BuildIcon />, title: 'Serviços', link: '/servicos' },
+    { icon: <AppsIcon />, title: 'Cases', link: '/cases' },
+    { icon: <CameraAltIcon />, title: 'Mídias', link: '/midias' },
+    { icon: <PeopleIcon />, title: 'Usuários', link: '/usuarios' }
+  ]
+
   function handleSetItemCollapse(index: string) {
-    setItemCollapsed(itemCollapsed == index ? null : index)
+    setItemCollapsed(itemCollapsed === index ? null : index)
   }
 
   React.useEffect(() => {
@@ -38,6 +48,22 @@ export const ListItems = () => {
         case '/servicos/adicionar':
           setSelectedIndexCollapse('/servicos')
           setItemCollapsed('/servicos')
+          break
+        case '/cases':
+          setSelectedIndexCollapse('/cases')
+          setItemCollapsed('/cases')
+          break
+        case '/cases/adicionar':
+          setSelectedIndexCollapse('/cases')
+          setItemCollapsed('/cases')
+          break
+        case '/midias':
+          setSelectedIndexCollapse('/midias')
+          setItemCollapsed('/midias')
+          break
+        case '/midias/adicionar':
+          setSelectedIndexCollapse('/midias')
+          setItemCollapsed('/midias')
           break
         case '/usuarios':
           setSelectedIndexCollapse('/usuarios')
@@ -60,74 +86,46 @@ export const ListItems = () => {
         </ListItemIcon>
         <ListItemText primary="Dashboard" />
       </ListItemButton>
-      <ListItemButton
-        selected={selectedIndexCollapse === '/servicos'}
-        onClick={() => handleSetItemCollapse('/servicos')}
-      >
-        <ListItemIcon>
-          <AppsIcon />
-        </ListItemIcon>
-        <ListItemText primary="Serviços" />
-        {itemCollapsed === '/servicos' ? (
-          <ExpandLessIcon />
-        ) : (
-          <ExpandMoreIcon />
-        )}
-      </ListItemButton>
-      <Collapse timeout="auto" unmountOnExit in={itemCollapsed === '/servicos'}>
-        <List component="div" disablePadding>
+      {listItemIconClasses.map(item => (
+        <>
           <ListItemButton
-            sx={{ pl: 4 }}
-            component="a"
-            href="/servicos"
-            selected={selectedIndex === '/servicos'}
+            selected={selectedIndexCollapse === item.link}
+            onClick={() => handleSetItemCollapse(item.link)}
           >
-            <ListItemText primary="Lista" />
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.title} />
+            {itemCollapsed === item.link ? (
+              <ExpandLessIcon />
+            ) : (
+              <ExpandMoreIcon />
+            )}
           </ListItemButton>
-          <ListItemButton
-            sx={{ pl: 4 }}
-            component="a"
-            href="/servicos/adicionar"
-            selected={selectedIndex === '/servicos/adicionar'}
+          <Collapse
+            timeout="auto"
+            unmountOnExit
+            in={itemCollapsed === item.link}
           >
-            <ListItemText primary="Adicionar" />
-          </ListItemButton>
-        </List>
-      </Collapse>
-      <ListItemButton
-        selected={selectedIndexCollapse === '/usuarios'}
-        onClick={() => handleSetItemCollapse('/usuarios')}
-      >
-        <ListItemIcon>
-          <PeopleIcon />
-        </ListItemIcon>
-        <ListItemText primary="Usuários" />
-        {itemCollapsed === '/usuarios' ? (
-          <ExpandLessIcon />
-        ) : (
-          <ExpandMoreIcon />
-        )}
-      </ListItemButton>
-      <Collapse timeout="auto" unmountOnExit in={itemCollapsed === '/usuarios'}>
-        <List component="div" disablePadding>
-          <ListItemButton
-            sx={{ pl: 4 }}
-            component="a"
-            href="/usuarios"
-            selected={selectedIndex === '/usuarios'}
-          >
-            <ListItemText primary="Lista" />
-          </ListItemButton>
-          <ListItemButton
-            sx={{ pl: 4 }}
-            component="a"
-            href="/usuarios/adicionar"
-            selected={selectedIndex === '/usuarios/adicionar'}
-          >
-            <ListItemText primary="Adicionar" />
-          </ListItemButton>
-        </List>
-      </Collapse>
+            <List component="div" disablePadding>
+              <ListItemButton
+                sx={{ pl: 4 }}
+                component="a"
+                href={item.link}
+                selected={selectedIndex === item.link}
+              >
+                <ListItemText primary="Lista" />
+              </ListItemButton>
+              <ListItemButton
+                sx={{ pl: 4 }}
+                component="a"
+                href={`${item.link}/adicionar`}
+                selected={selectedIndex === `${item.link}/adicionar`}
+              >
+                <ListItemText primary="Adicionar" />
+              </ListItemButton>
+            </List>
+          </Collapse>
+        </>
+      ))}
     </>
   )
 }

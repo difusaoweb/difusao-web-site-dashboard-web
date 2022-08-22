@@ -5,9 +5,7 @@ import {
   Typography,
   Container,
   Grid,
-  Button,
-  Snackbar,
-  Alert
+  Button
 } from '@mui/material'
 
 import { Copyright } from '../../components/atoms/Copyright'
@@ -15,11 +13,14 @@ import { AppBar } from '../../components/atoms/AppBar'
 import { SideBar } from '../../components/molecules/SideBar'
 import { ServicesAddFormEdit } from '../../components/ecosystems/ServicesAddFormEdit'
 import { ServicesAddFormEdit2 } from '../../components/ecosystems/ServicesAddFormEdit2'
-import { ServicesAddFormEdit3 } from '../../components/ecosystems/ServicesAddFormEdit3'
-import { createService, useAppDispatch, useAppSelector } from '../../redux'
+import {
+  reduxServicesCreateServiceFunction,
+  useAppDispatch
+  // useAppSelector
+} from '../../redux'
 
 export const ServiceAddPage: React.FC = () => {
-  const { createServiceReturn } = useAppSelector(state => state.services)
+  // const { createServiceReturn } = useAppSelector(state => state.services)
   const dispatch = useAppDispatch()
 
   const [open, setOpen] = React.useState(true)
@@ -27,38 +28,20 @@ export const ServiceAddPage: React.FC = () => {
     setOpen(!open)
   }
 
-  const [name, setName] = React.useState<string | null>(null)
-  const [inStock, setInStock] = React.useState<boolean>(true)
-  const [price, setPrice] = React.useState<number | null>(null)
+  const [title, setTitle] = React.useState<string | null>(null)
   const [description, setDescription] = React.useState<string | null>(null)
-  const [images, setImages] = React.useState<string[] | null>(null)
-  const [sku, setSku] = React.useState<string | null>(null)
-  const [categoryId, setCategoryId] = React.useState<number | null>(null)
+  const [image, setImage] = React.useState<number | null>(null)
+  const [isLoadingCreateService, setIsLoadingCreateService] =
+    React.useState(false)
 
-  const [loadingCreateService, setLoadingCreateService] = React.useState(false)
-  const [alertCreateService, setAlertCreateService] = React.useState(false)
+  async function createService() {
+    if (isLoadingCreateService || !title || !description || !image) return
 
-  async function addNewService() {
-    if (loadingCreateService) {
-      return
-    }
-
-    if (!!name && !!price) {
-      setLoadingCreateService(true)
-      await dispatch(
-        createService({
-          name,
-          description,
-          stock: inStock,
-          images,
-          sku,
-          categoryId,
-          price
-        })
-      )
-      setAlertCreateService(true)
-      setLoadingCreateService(false)
-    }
+    setIsLoadingCreateService(true)
+    await dispatch(
+      reduxServicesCreateServiceFunction({ title, description, image })
+    )
+    setIsLoadingCreateService(false)
   }
 
   return (
@@ -96,28 +79,20 @@ export const ServiceAddPage: React.FC = () => {
             <Grid container spacing={3}>
               <Grid item xs={8}>
                 <ServicesAddFormEdit
-                  name={name}
-                  setName={setName}
+                  title={title}
+                  setTitle={setTitle}
                   description={description}
                   setDescription={setDescription}
                 />
               </Grid>
               <Grid item xs={4}>
-                <ServicesAddFormEdit2
-                  inStock={inStock}
-                  setInStock={setInStock}
-                  sku={sku}
-                  setSku={setSku}
-                  categoryId={categoryId}
-                  setCategoryId={setCategoryId}
-                />
-                <ServicesAddFormEdit3 price={price} setPrice={setPrice} />
+                <ServicesAddFormEdit2 image={image} setImage={setImage} />
                 <Button
                   variant="contained"
                   size="large"
                   fullWidth
-                  onClick={addNewService}
-                  disabled={!(!!name && !!price)}
+                  onClick={createService}
+                  disabled={!title || !description || !image}
                 >
                   Criar servico
                 </Button>
@@ -127,17 +102,6 @@ export const ServiceAddPage: React.FC = () => {
           <Copyright />
         </Box>
       </Box>
-      <Snackbar open={alertCreateService} autoHideDuration={500}>
-        <Alert
-          onClose={() => setAlertCreateService(false)}
-          severity={createServiceReturn.success ? 'success' : 'error'}
-          sx={{ width: '100%' }}
-        >
-          {createServiceReturn.success
-            ? 'Serviço criado com sucesso!'
-            : 'Erro ao criar o servico!'}
-        </Alert>
-      </Snackbar>
     </>
   )
 }

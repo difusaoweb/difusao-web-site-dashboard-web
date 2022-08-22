@@ -1,73 +1,44 @@
 import * as React from 'react'
-import {
-  Paper,
-  TextField,
-  Box,
-  Input,
-  Button,
-  Typography,
-  Modal
-} from '@mui/material'
-
-import { UploadImagePreview } from '../../atoms/UploadImagePreview'
-import { LibraryModal } from '../../organims/LibraryModal'
-import ImagePlaceholderUploadFile from '../../../assets/images/ImageUploadPlaceholder.png'
+import { Paper, TextField, Box, Typography } from '@mui/material'
 
 interface ServicesAddFormEditProps {
-  name: string | null
-  setName(name: string): void
+  title: string | null
+  setTitle(title: string | null): void
   description: string | null
-  setDescription(description: string): void
+  setDescription(description: string | null): void
 }
 export const ServicesAddFormEdit = ({
-  name,
-  setName,
+  title,
+  setTitle,
   description,
   setDescription
 }: ServicesAddFormEditProps) => {
-  // const [name, setName] = React.useState<string | null>(null)
-  // const [description, setDescription] = React.useState<string | null>(null)
-  const [image, setImage] = React.useState<string | null>(null)
-  const [modalOpen, setModalOpen] = React.useState(false)
-
   return (
     <Paper sx={{ width: '100%', mb: 2, padding: 3 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
         <TextField
           label="Nome do Serviço"
           variant="outlined"
-          value={name}
-          onChange={event => setName(String(event.target.value))}
+          value={title ?? ''}
+          onChange={e =>
+            setTitle(e.target.value ? String(e.target.value) : null)
+          }
           sx={{ mb: 3 }}
-          helperText={name ? '' : 'O nome é obrigatório.'}
-          error={!name}
+          // helperText={title ? '' : 'O nome é obrigatório.'}
+          // error={!title}
         />
         <Box>
           <Typography sx={{ mb: 1 }}>Descrição</Typography>
           <TextField
             multiline
-            value={description}
-            onChange={event => setDescription(String(event.target.value))}
+            value={description ?? ''}
+            onChange={e =>
+              setDescription(e.target.value ? String(e.target.value) : null)
+            }
             rows={8}
             fullWidth
             sx={{ mb: 3 }}
           />
-        </Box>
-        <Box>
-          <Typography sx={{ mb: 1 }}>Imagem</Typography>
-          <Box>
-            <UploadImagePreview
-              alt="Placeholder"
-              url={ImagePlaceholderUploadFile}
-              open={modalOpen}
-              setOpen={setModalOpen}
-            />
-            <LibraryModal
-              open={modalOpen}
-              setOpen={() => setModalOpen(false)}
-              multiple={false}
-            />
-          </Box>
         </Box>
       </Box>
     </Paper>

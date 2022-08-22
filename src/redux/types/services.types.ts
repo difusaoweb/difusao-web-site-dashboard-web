@@ -1,15 +1,5 @@
 import { ReturnErrorInterface, ErrorStatus } from './common.types'
 
-export interface CreateServiceData {
-  name: string
-  description: string | null
-  images: string[] | null
-  sku: number | null
-  stock: boolean
-  price: number
-  categoryId: number | null
-}
-
 export interface ReduxServicesGetServiceListServiceParameters {
   page: number
   perPage: number
@@ -37,17 +27,21 @@ export interface ReduxServicesDeleteServiceListServiceParameters {
 export interface ReduxServicesDeleteServiceListReducerPayload {
   success: {
     deleted: boolean
+    servicesId: number[]
   } | null
   failure: ErrorStatus | null
 }
 
-export const CREATE_SERVICE = 'CREATE_SERVICE'
-interface CreateServicesAction {
-  type: typeof CREATE_SERVICE
-  payload: {
-    success: { service_id: number } | null
-    failure: true | null
-  }
+export interface ReduxServicesCreateServiceServiceParameters {
+  title: string
+  description: string
+  image: number
+}
+export interface ReduxServicesCreateServiceReducerPayload {
+  success: {
+    serviceId: number
+  } | null
+  failure: ErrorStatus | null
 }
 
 export const REDUX_SERVICES_GET_SERVICE_LIST = 'REDUX_SERVICES_GET_SERVICE_LIST'
@@ -63,12 +57,13 @@ interface ReduxServicesDeleteServiceListReducer {
   payload: ReduxServicesDeleteServiceListReducerPayload
 }
 
-export interface ServiceState {
-  createServiceReturn: {
-    success: { service_id: number } | null
-    failure: true | null
-  }
+export const REDUX_SERVICES_CREATE_SERVICE = 'REDUX_SERVICES_CREATE_SERVICE'
+interface ReduxServicesCreateServiceReducer {
+  type: typeof REDUX_SERVICES_CREATE_SERVICE
+  payload: ReduxServicesCreateServiceReducerPayload
+}
 
+export interface ServiceState {
   getServiceListServices: ServiceData[] | null
   getServiceListLastPage: number | null
   getServiceListTotal: number | null
@@ -76,9 +71,12 @@ export interface ServiceState {
 
   deleteServiceListDeleted: boolean | null
   deleteServiceListError: ErrorStatus | null
+
+  createServiceServiceId: number | null
+  createServiceError: ErrorStatus | null
 }
 
 export type ServiceActionTypes =
-  | CreateServicesAction
   | ReduxServicesGetServiceListReducer
   | ReduxServicesDeleteServiceListReducer
+  | ReduxServicesCreateServiceReducer
