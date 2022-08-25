@@ -1,4 +1,4 @@
-import { ActionCreator, Dispatch } from 'redux'
+import { Dispatch } from 'redux'
 
 import {
   AlertActionTypes,
@@ -6,13 +6,10 @@ import {
   SetAlertParametersReducer
 } from '../types'
 
-const setAlertAction: ActionCreator<AlertActionTypes> = (
-  payload: SetAlertParametersReducer
-) => {
-  return { type: SET_ALERT, payload }
-}
-export const setAlert = (alert: SetAlertParametersReducer) => {
+export function reduxAlertsSetAlertFunction(
+  reducer: SetAlertParametersReducer
+) {
   return async (dispatch: Dispatch<AlertActionTypes>) => {
-    dispatch(setAlertAction(alert))
+    dispatch({ type: SET_ALERT, payload: reducer })
   }
 }

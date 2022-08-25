@@ -6,47 +6,52 @@ import {
   ReduxAttachmentsGetAttachmentListReducerPayload,
   REDUX_ATTACHMENTS_GET_ATTACHMENT_LIST,
   ReduxAttachmentsGetAttachmentListServiceParameters,
+  ReduxAttachmentsGetAttachmentListFunctionDispatch,
   ReduxAttachmentsGetAttachmentReducerPayload,
   REDUX_ATTACHMENTS_GET_ATTACHMENT,
   ReduxAttachmentsGetAttachmentServiceParameters,
+  ReduxAttachmentsGetAttachmentFunctionDispatch,
   ReduxAttachmentsCreateAttachmentReducerPayload,
   REDUX_ATTACHMENTS_CREATE_ATTACHMENT,
   ReduxAttachmentsCreateAttachmentServiceParameters,
+  ReduxAttachmentsCreateAttachmentFunctionDispatch,
   ReduxAttachmentsUpdateAttachmentReducerPayload,
   ReduxAttachmentsUpdateAttachmentServiceParameters,
+  ReduxAttachmentsUpdateAttachmentFunctionDispatch,
   REDUX_ATTACHMENTS_UPDATE_ATTACHMENT,
   ReduxAttachmentsDeleteAttachmentListReducerPayload,
   REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST,
   ReduxAttachmentsDeleteAttachmentListServiceParameters,
-  ReduxAttachmentsClearStateReducerPayload,
-  REDUX_ATTACHMENTS_CLEAR_STATE,
-  ReduxAttachmentsClearStateServiceParameters
+  ReduxAttachmentsDeleteAttachmentListFunctionDispatch,
+  REDUX_ATTACHMENTS_CLEAR_STATE
 } from '../types'
 import { attachmentsService } from '../../services'
-import { setAlert } from './alerts.actions'
+import { reduxAlertsSetAlertFunction } from './alerts.actions'
 
 const reduxAttachmentsGetAttachmentListAction: ActionCreator<
   AttachmentActionTypes
 > = (payload: ReduxAttachmentsGetAttachmentListReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_GET_ATTACHMENT_LIST, payload }
 }
-type reduxAttachmentsGetAttachmentListFunctionType = ReturnType<
-  typeof AttachmentActionTypes | typeof AlertActionTypes
->
-export function reduxAttachmentsGetAttachmentListFunction(
-  parameters: ReduxAttachmentsGetAttachmentListServiceParameters
-) {
+export function reduxAttachmentsGetAttachmentListFunction({
+  page,
+  perPage
+}: ReduxAttachmentsGetAttachmentListServiceParameters) {
   return async (
-    dispatch: Dispatch<reduxAttachmentsGetAttachmentListFunctionType>
+    dispatch: Dispatch<ReduxAttachmentsGetAttachmentListFunctionDispatch>
   ) => {
     try {
-      const { data } = await attachmentsService.getAttachmentList(parameters)
+      const { data } = await attachmentsService.getAttachmentList({
+        page,
+        perPage
+      })
       const attachments = data?.success?.attachments
       const lastPage = data?.success?.last_page
+      const total = data?.success?.total
 
       dispatch(
         reduxAttachmentsGetAttachmentListAction({
-          success: { attachments, lastPage },
+          success: { attachments, lastPage, currentPage: page, total },
           failure: null
         })
       )
@@ -63,7 +68,12 @@ export function reduxAttachmentsGetAttachmentListFunction(
         case 404:
           break
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro desconhecido!'
+            })
+          )
           break
       }
 
@@ -82,14 +92,11 @@ const reduxAttachmentsGetAttachmentAction: ActionCreator<
 > = (payload: ReduxAttachmentsGetAttachmentReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_GET_ATTACHMENT, payload }
 }
-type reduxAttachmentsGetAttachmentFunctionType = ReturnType<
-  typeof AttachmentActionTypes | typeof AlertActionTypes
->
 export function reduxAttachmentsGetAttachmentFunction(
   parameters: ReduxAttachmentsGetAttachmentServiceParameters
 ) {
   return async (
-    dispatch: Dispatch<reduxAttachmentsGetAttachmentFunctionType>
+    dispatch: Dispatch<ReduxAttachmentsGetAttachmentFunctionDispatch>
   ) => {
     try {
       const { data } = await attachmentsService.getAttachment(parameters)
@@ -114,7 +121,12 @@ export function reduxAttachmentsGetAttachmentFunction(
         case 404:
           break
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro desconhecido!'
+            })
+          )
           break
       }
 
@@ -133,14 +145,11 @@ const reduxAttachmentsCreateAttachmentAction: ActionCreator<
 > = (payload: ReduxAttachmentsCreateAttachmentReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_CREATE_ATTACHMENT, payload }
 }
-type reduxAttachmentsCreateAttachmentFunctionType = ReturnType<
-  typeof AttachmentActionTypes | typeof AlertActionTypes
->
 export function reduxAttachmentsCreateAttachmentFunction(
   parameters: ReduxAttachmentsCreateAttachmentServiceParameters
 ) {
   return async (
-    dispatch: Dispatch<reduxAttachmentsCreateAttachmentFunctionType>
+    dispatch: Dispatch<ReduxAttachmentsCreateAttachmentFunctionDispatch>
   ) => {
     try {
       const { data } = await attachmentsService.createAttachment(parameters)
@@ -163,7 +172,12 @@ export function reduxAttachmentsCreateAttachmentFunction(
 
       switch (status) {
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro desconhecido!'
+            })
+          )
           break
       }
 
@@ -182,14 +196,11 @@ const reduxAttachmentsUpdateAttachmentAction: ActionCreator<
 > = (payload: ReduxAttachmentsUpdateAttachmentReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_UPDATE_ATTACHMENT, payload }
 }
-type reduxAttachmentsUpdateAttachmentFunctionType = ReturnType<
-  typeof AttachmentActionTypes | typeof AlertActionTypes
->
 export function reduxAttachmentsUpdateAttachmentFunction(
   parameters: ReduxAttachmentsUpdateAttachmentServiceParameters
 ) {
   return async (
-    dispatch: Dispatch<reduxAttachmentsUpdateAttachmentFunctionType>
+    dispatch: Dispatch<ReduxAttachmentsUpdateAttachmentFunctionDispatch>
   ) => {
     try {
       const { data } = await attachmentsService.updateAttachment(parameters)
@@ -201,7 +212,9 @@ export function reduxAttachmentsUpdateAttachmentFunction(
           failure: null
         })
       )
-      dispatch(setAlert({ type: 'success', message: 'Atualizado!' }))
+      dispatch(
+        reduxAlertsSetAlertFunction({ type: 'success', message: 'Atualizado!' })
+      )
     } catch (err) {
       console.log(err)
       let status: number | null = null
@@ -213,7 +226,12 @@ export function reduxAttachmentsUpdateAttachmentFunction(
 
       switch (status) {
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro desconhecido!'
+            })
+          )
           break
       }
 
@@ -232,14 +250,11 @@ const reduxAttachmentsDeleteAttachmentListAction: ActionCreator<
 > = (payload: ReduxAttachmentsDeleteAttachmentListReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST, payload }
 }
-type reduxAttachmentsDeleteAttachmentListFunctionType = ReturnType<
-  typeof AttachmentActionTypes | typeof AlertActionTypes
->
 export function reduxAttachmentsDeleteAttachmentListFunction({
   attachmentsId
 }: ReduxAttachmentsDeleteAttachmentListServiceParameters) {
   return async (
-    dispatch: Dispatch<reduxAttachmentsDeleteAttachmentListFunctionType>
+    dispatch: Dispatch<ReduxAttachmentsDeleteAttachmentListFunctionDispatch>
   ) => {
     try {
       const { data } = await attachmentsService.deleteAttachmentList({
@@ -255,7 +270,9 @@ export function reduxAttachmentsDeleteAttachmentListFunction({
       )
       const alertMessage =
         attachmentsId.length > 1 ? 'Mídias removidas!' : 'Mídia removida!'
-      dispatch(setAlert({ type: 'success', message: alertMessage }))
+      dispatch(
+        reduxAlertsSetAlertFunction({ type: 'success', message: alertMessage })
+      )
     } catch (err) {
       console.log(err)
       let status: number | null = null
@@ -267,7 +284,12 @@ export function reduxAttachmentsDeleteAttachmentListFunction({
 
       switch (status) {
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro desconhecido!'
+            })
+          )
           break
       }
 

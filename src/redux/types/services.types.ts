@@ -1,15 +1,15 @@
-import { ReturnErrorInterface, ErrorStatus } from './common.types'
+import { NumberOrNull, BooleanOrNull, ErrorStatusOrNull } from './common.types'
 
-export interface ReduxServicesGetServiceListServiceParameters {
-  page: number
-  perPage: number
-}
 export interface ServiceData {
   id: number
   image: string
   title: string
   description: string
   created_at: string
+}
+export interface ReduxServicesGetServiceListServiceParameters {
+  page: number
+  perPage: number
 }
 export interface ReduxServicesGetServiceListReducerPayload {
   success: {
@@ -18,8 +18,11 @@ export interface ReduxServicesGetServiceListReducerPayload {
     lastPage: number
     total: number
   } | null
-  failure: ErrorStatus | null
+  failure: ErrorStatusOrNull
 }
+export type ReduxServicesGetServiceListFunctionDispatch = ReturnType<
+  typeof ServiceActionTypes | typeof AlertActionTypes
+>
 
 export interface ReduxServicesDeleteServiceListServiceParameters {
   servicesId: number[]
@@ -29,8 +32,11 @@ export interface ReduxServicesDeleteServiceListReducerPayload {
     deleted: boolean
     servicesId: number[]
   } | null
-  failure: ErrorStatus | null
+  failure: ErrorStatusOrNull
 }
+export type ReduxServicesDeleteServiceListFunctionDispatch = ReturnType<
+  typeof ServiceActionTypes | typeof AlertActionTypes
+>
 
 export interface ReduxServicesCreateServiceServiceParameters {
   title: string
@@ -41,8 +47,11 @@ export interface ReduxServicesCreateServiceReducerPayload {
   success: {
     serviceId: number
   } | null
-  failure: ErrorStatus | null
+  failure: ErrorStatusOrNull
 }
+export type ReduxServicesCreateServiceFunctionDispatch = ReturnType<
+  typeof ServiceActionTypes | typeof AlertActionTypes
+>
 
 export const REDUX_SERVICES_GET_SERVICE_LIST = 'REDUX_SERVICES_GET_SERVICE_LIST'
 interface ReduxServicesGetServiceListReducer {
@@ -65,15 +74,15 @@ interface ReduxServicesCreateServiceReducer {
 
 export interface ServiceState {
   getServiceListServices: ServiceData[] | null
-  getServiceListLastPage: number | null
-  getServiceListTotal: number | null
-  getServiceListError: ErrorStatus | null
+  getServiceListLastPage: NumberOrNull
+  getServiceListTotal: NumberOrNull
+  getServiceListError: ErrorStatusOrNull
 
-  deleteServiceListDeleted: boolean | null
-  deleteServiceListError: ErrorStatus | null
+  deleteServiceListDeleted: BooleanOrNull
+  deleteServiceListError: ErrorStatusOrNull
 
-  createServiceServiceId: number | null
-  createServiceError: ErrorStatus | null
+  createServiceServiceId: NumberOrNull
+  createServiceError: ErrorStatusOrNull
 }
 
 export type ServiceActionTypes =

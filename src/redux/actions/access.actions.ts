@@ -24,7 +24,7 @@ import {
 import { accessService } from '../../services'
 import { api } from '../../services/api'
 import { RootState } from '../store'
-import { setAlert } from './alerts.actions'
+import { reduxAlertsSetAlertFunction } from './alerts.actions'
 
 const getLogOutSuccess: ActionCreator<AccessActionTypes> = () => {
   return { type: GET_LOG_OUT, payload: { success: true, failure: null } }
@@ -106,11 +106,13 @@ export function accessResetPassword({
         case 404:
           console.log('404')
           dispatch(
-            setNotification('forgotPassword.forgotPasswordEmail.error.404')
+            reduxAlertsSetAlertFunction(
+              'forgotPassword.forgotPasswordEmail.error.404'
+            )
           )
           break
         default:
-          dispatch(setNotification('index.error.0'))
+          dispatch(reduxAlertsSetAlertFunction('index.error.0'))
           break
       }
     }
@@ -135,11 +137,13 @@ export function accessResetPasswordVerifyCode({
       switch (status) {
         case 404:
           dispatch(
-            setNotification('forgotPassword.forgotPasswordVerifyCode.error.404')
+            reduxAlertsSetAlertFunction(
+              'forgotPassword.forgotPasswordVerifyCode.error.404'
+            )
           )
           break
         default:
-          dispatch(setNotification('index.error.0'))
+          dispatch(reduxAlertsSetAlertFunction('index.error.0'))
           break
       }
     }
@@ -168,7 +172,7 @@ export function accessResetPasswordChangePassword({
 
       switch (status) {
         default:
-          dispatch(setNotification('index.error.0'))
+          dispatch(reduxAlertsSetAlertFunction('index.error.0'))
           break
       }
     }
@@ -212,7 +216,10 @@ export function reduxAccessGetStorageDataFunction() {
       )
     } catch (err) {
       console.log(err)
-      setAlert({ type: 'error', message: 'Erro desconhecido!' })
+      reduxAlertsSetAlertFunction({
+        type: 'error',
+        message: 'Erro desconhecido!'
+      })
       dispatch(
         reduxAccessGetStorageDataAction({
           success: null,
@@ -254,7 +261,10 @@ export function reduxAccessCheckAuthenticationFunction() {
       await localStorage.clear()
 
       if (status !== 401) {
-        setAlert({ type: 'error', message: 'Erro desconhecido!' })
+        reduxAlertsSetAlertFunction({
+          type: 'error',
+          message: 'Erro desconhecido!'
+        })
       }
 
       dispatch(
@@ -313,15 +323,26 @@ export function reduxAccessGetLoginFunction(
       switch (status) {
         case 404:
           dispatch(
-            setAlert({ type: 'error', message: 'Usuário não encontrado!' })
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Usuário não encontrado!'
+            })
           )
           break
         case 403:
-          dispatch(setAlert({ type: 'warning', message: 'Senha incorreta.' }))
+          dispatch(
+            reduxAlertsSetAlertFunction({
+              type: 'warning',
+              message: 'Senha incorreta.'
+            })
+          )
           break
         default:
           dispatch(
-            setAlert({ type: 'error', message: 'Erro ao desconhecido...' })
+            reduxAlertsSetAlertFunction({
+              type: 'error',
+              message: 'Erro ao desconhecido...'
+            })
           )
           break
       }

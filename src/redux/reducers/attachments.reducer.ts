@@ -31,12 +31,17 @@ export function attachmentsReducer(
     case REDUX_ATTACHMENTS_GET_ATTACHMENT_LIST: {
       let getAttachmentListAttachments = state.getAttachmentListAttachments
       if (action.payload.success) {
-        const { attachments } = action.payload.success
+        const { currentPage, attachments } = action.payload.success
+
         if (getAttachmentListAttachments) {
-          getAttachmentListAttachments = [
-            ...getAttachmentListAttachments,
-            ...attachments
-          ]
+          if (currentPage === 1) {
+            getAttachmentListAttachments = attachments
+          } else {
+            getAttachmentListAttachments = [
+              ...getAttachmentListAttachments,
+              ...attachments
+            ]
+          }
         } else {
           getAttachmentListAttachments = attachments
         }
@@ -45,9 +50,8 @@ export function attachmentsReducer(
         ...state,
         getAttachmentListAttachments,
         getAttachmentListLastPage: action.payload.success?.lastPage ?? null,
-        getAttachmentListError: action.payload.failure,
-        deleteAttachmentListDeleted: null,
-        deleteAttachmentListError: null
+        getAttachmentListTotal: action.payload.success?.total ?? null,
+        getAttachmentListError: action.payload.failure
       }
     }
     case REDUX_ATTACHMENTS_GET_ATTACHMENT: {

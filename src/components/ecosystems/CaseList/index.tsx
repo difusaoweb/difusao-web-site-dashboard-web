@@ -1,13 +1,19 @@
 import * as React from 'react'
-import { alpha } from '@mui/material/styles'
-import { Replay as ReplayIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { alpha, useTheme } from '@mui/material/styles'
+import {
+  Replay as ReplayIcon,
+  MoreVert as MoreVertIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon
+} from '@mui/icons-material'
 import { visuallyHidden } from '@mui/utils'
+import { DateTime } from 'luxon'
 import {
   Box,
   Table,
   TableBody,
   TableCell,
-  TableRow as MuiTableRow,
+  TableRow,
   TableContainer,
   TablePagination,
   TableSortLabel,
@@ -17,18 +23,24 @@ import {
   Paper,
   Checkbox,
   IconButton,
+  Menu,
+  MenuItem,
   CircularProgress,
-  Tooltip
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Avatar,
+  Link
 } from '@mui/material'
 
 import {
-  ServiceData,
+  CaseData,
   useAppSelector,
-  reduxServicesGetServiceListFunction,
-  reduxServicesDeleteServiceListFunction,
+  reduxCasesGetCaseListFunction,
+  reduxCasesDeleteCaseListFunction,
   useAppDispatch
 } from '../../../redux'
-import { TableRow } from '../../molecules/TableRow'
+import { ListItemLink } from '../../atoms/ListItemLink'
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
   if (b[orderBy] < a[orderBy]) {
@@ -69,7 +81,7 @@ function stableSort<T>(
 }
 
 interface HeadCell {
-  id: keyof ServiceData
+  id: keyof CaseData
   label: string
   numeric?: boolean
   noShort?: true
@@ -98,7 +110,7 @@ interface EnhancedTableProps {
   numSelected: number
   onRequestSort: (
     event: React.MouseEvent<unknown>,
-    property: keyof ServiceData
+    property: keyof CaseData
   ) => void
   onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
   order: Order
@@ -115,13 +127,13 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     onRequestSort
   } = props
   const createSortHandler =
-    (property: keyof ServiceData) => (event: React.MouseEvent<unknown>) => {
+    (property: keyof CaseData) => (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property)
     }
 
   return (
     <TableHead>
-      <MuiTableRow>
+      <TableRow>
         <TableCell padding="checkbox">
           <Checkbox
             color="primary"
@@ -161,7 +173,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
           </TableCell>
         ))}
         <TableCell></TableCell>
-      </MuiTableRow>
+      </TableRow>
     </TableHead>
   )
 }
@@ -234,35 +246,42 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   )
 }
 
-export const ServiceList = () => {
-  const {
-    getServiceListServices,
-    getServiceListTotal,
-    deleteServiceListDeleted
-  } = useAppSelector(state => state.services)
+export const CaseList = () => {
+  const { getCaseListCases, getCaseListTotal, deleteCaseListDeleted } =
+    useAppSelector(state => state.cases)
+  const theme = useTheme()
   const dispatch = useAppDispatch()
 
-  const [isOnGetServiceList, setIsOnGetServiceList] = React.useState(true)
-  const [isLoadingGetServiceList, setIsLoadingGetServiceList] =
+  const [isOnGetCaseList, setIsOnGetCaseList] = React.useState(true)
+  const [isLoadingGetCaseList, setIsLoadingGetCaseList] = React.useState(false)
+  const [isLoadingDeleteCaseList, setIsLoadingDeleteCaseList] =
     React.useState(false)
-  const [isLoadingDeleteServiceList, setIsLoadingDeleteServiceList] =
-    React.useState(false)
-  const [rows, setRows] = React.useState<ServiceData[] | null>(null)
+  const [rows, setRows] = React.useState<CaseData[] | null>(null)
   const [countAllRows, setCountAllRows] = React.useState(0)
   const [order, setOrder] = React.useState<Order>('desc')
-  const [orderBy, setOrderBy] = React.useState<keyof ServiceData>('created_at')
+  const [orderBy, setOrderBy] = React.useState<keyof CaseData>('created_at')
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
   const [selectedsDestroy, setSelectedsDestroy] = React.useState<
     number[] | null
   >(null)
   const [pageQuery, setPageQuery] = React.useState(1)
   const [pageRows, setPageRows] = React.useState(0)
-  const [perPageRows, setPerPageRows] = React.useState(50)
+  const [perPageRows, setPerPageRows] = React.useState(3)
+  const [rowCellAnchorEl, setRowCellAnchorEl] = React.useState<any | null>(null)
   const [isSetRowsTable, setIsSetRowsTable] = React.useState(false)
+
+  const rowCellOpen = Boolean(rowCellAnchorEl)
+
+  function isSelected(id: number) {
+    if (selecteds) {
+      return selecteds.indexOf(id) !== -1
+    }
+    return false
+  }
 
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
-    property: keyof ServiceData
+    property: keyof CaseData
   ) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
@@ -285,7 +304,7 @@ export const ServiceList = () => {
     setPageRows(0)
     setSelecteds(null)
     setSelectedsDestroy(null)
-    setIsOnGetServiceList(true)
+    setIsOnGetCaseList(true)
   }
 
   function handleReloadTable() {
@@ -320,11 +339,25 @@ export const ServiceList = () => {
     }
   }
 
+  function handleRowToggleMenu(index, event) {
+    setRowCellAnchorEl({ [index]: event.currentTarget })
+    setSelecteds(null)
+  }
+
+  function handleRowMenuClose() {
+    setRowCellAnchorEl(null)
+  }
+
+  function handleRowMenuDelete(id: number) {
+    setSelectedsDestroy([id])
+    handleRowMenuClose()
+  }
+
   function handleChangePage(thePage: number) {
     setPageRows(thePage)
     if (thePage === pageQuery) {
       setPageQuery(page => page + 1)
-      setIsOnGetServiceList(true)
+      setIsOnGetCaseList(true)
     } else {
       setSelectedsDestroy(null)
       setIsSetRowsTable(true)
@@ -337,14 +370,14 @@ export const ServiceList = () => {
     setPageRows(0)
     setPageQuery(1)
     setSelecteds(null)
-    setIsOnGetServiceList(true)
+    setIsOnGetCaseList(true)
   }
 
   function setRowsTable() {
     setIsSetRowsTable(false)
-    if (getServiceListServices) {
+    if (getCaseListCases) {
       setRows(
-        getServiceListServices.slice(
+        getCaseListCases.slice(
           pageRows * perPageRows,
           pageRows * perPageRows +
             (perPageRows === -1 ? rows?.length ?? 0 : perPageRows)
@@ -353,44 +386,44 @@ export const ServiceList = () => {
     } else {
       setRows(null)
     }
-    setCountAllRows(getServiceListTotal ?? 0)
+    setCountAllRows(getCaseListTotal ?? 0)
   }
 
-  async function onGetServiceList() {
-    if (isLoadingGetServiceList) return
-    setIsOnGetServiceList(false)
+  async function onGetCaseList() {
+    if (isLoadingGetCaseList) return
+    setIsOnGetCaseList(false)
 
-    setIsLoadingGetServiceList(true)
+    setIsLoadingGetCaseList(true)
     await dispatch(
-      reduxServicesGetServiceListFunction({
+      reduxCasesGetCaseListFunction({
         page: pageQuery,
         perPage: perPageRows
       })
     )
-    setIsLoadingGetServiceList(false)
+    setIsLoadingGetCaseList(false)
   }
 
-  async function onDeleteServiceList() {
-    if (isLoadingDeleteServiceList || !selectedsDestroy) return
+  async function onDeleteCaseList() {
+    if (isLoadingDeleteCaseList || !selectedsDestroy) return
 
-    setIsLoadingDeleteServiceList(true)
+    setIsLoadingDeleteCaseList(true)
     await dispatch(
-      reduxServicesDeleteServiceListFunction({ servicesId: selectedsDestroy })
+      reduxCasesDeleteCaseListFunction({ casesId: selectedsDestroy })
     )
-    setIsLoadingDeleteServiceList(false)
+    setIsLoadingDeleteCaseList(false)
   }
 
-  // Get initial services list
+  // Get initial cases list
   React.useEffect(() => {
-    if (!isOnGetServiceList) return
-    onGetServiceList()
-  }, [isOnGetServiceList])
+    if (!isOnGetCaseList) return
+    onGetCaseList()
+  }, [isOnGetCaseList])
 
-  // Set rows where getServiceListServices is change and not null
+  // Set rows where getCaseListCases is change and not null
   React.useEffect(() => {
-    if (!getServiceListServices) return
+    if (!getCaseListCases) return
     setRowsTable()
-  }, [getServiceListServices])
+  }, [getCaseListCases])
   React.useEffect(() => {
     if (!isSetRowsTable) return
     setRowsTable()
@@ -398,20 +431,20 @@ export const ServiceList = () => {
 
   React.useEffect(() => {
     if (!selectedsDestroy) return
-    onDeleteServiceList()
+    onDeleteCaseList()
   }, [selectedsDestroy])
 
   React.useEffect(() => {
-    if (!deleteServiceListDeleted) return
+    if (!deleteCaseListDeleted) return
     resetTable()
-  }, [deleteServiceListDeleted])
+  }, [deleteCaseListDeleted])
 
   return (
     <>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar
           numSelected={selecteds?.length ?? 0}
-          loading={isLoadingGetServiceList || isLoadingDeleteServiceList}
+          loading={isLoadingGetCaseList || isLoadingDeleteCaseList}
           handleReloadTable={handleReloadTable}
           handleDeleteAllSelectedRows={handleDeleteAllSelectedRows}
         />
@@ -431,32 +464,127 @@ export const ServiceList = () => {
             />
             {rows ? (
               <TableBody>
-                {stableSort(rows, getComparator(order, orderBy)).map(row => (
-                  <TableRow
-                    key={row.id}
-                    row={row}
-                    selecteds={selecteds}
-                    setSelecteds={setSelecteds}
-                    handleRowCheckbox={handleRowCheckbox}
-                    isLoadingGetServiceList={isLoadingGetServiceList}
-                    isLoadingDeleteServiceList={isLoadingDeleteServiceList}
-                    setSelectedsDestroy={setSelectedsDestroy}
-                  />
-                ))}
+                {stableSort(rows, getComparator(order, orderBy)).map(
+                  (row, index) => {
+                    const isItemSelected = isSelected(row.id)
+                    const labelId = `enhanced-table-checkbox-${index}`
+
+                    const rowDateTimeString = DateTime.fromISO(
+                      row.created_at
+                    ).toFormat('dd/MM/yyyy HH:mm')
+
+                    return (
+                      <TableRow
+                        hover
+                        role="checkbox"
+                        aria-checked={isItemSelected}
+                        tabIndex={-1}
+                        key={row.id}
+                        selected={isItemSelected}
+                      >
+                        <TableCell padding="checkbox">
+                          <Checkbox
+                            color="primary"
+                            checked={isItemSelected}
+                            inputProps={{
+                              'aria-labelledby': labelId
+                            }}
+                            onClick={() => handleRowCheckbox(row.id)}
+                            disabled={
+                              isLoadingGetCaseList || isLoadingDeleteCaseList
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Avatar
+                            alt={row.title}
+                            src={row.image}
+                            variant="rounded"
+                            sx={{ width: 100, height: 100 }}
+                          />
+                        </TableCell>
+                        <TableCell align="left">
+                          <Link
+                            href={`/servicos/${row.id}`}
+                            sx={{
+                              color: 'unset',
+                              textDecoration: 'none',
+                              '&:hover': {
+                                color: 'primary.main'
+                              }
+                            }}
+                          >
+                            {row.title} - {row.id}
+                          </Link>
+                        </TableCell>
+                        <TableCell align="left">{row.description}</TableCell>
+                        <TableCell align="left">{rowDateTimeString}</TableCell>
+                        <TableCell>
+                          <IconButton
+                            id="rowCellBasicButton"
+                            aria-controls={
+                              rowCellOpen ? 'rowCellBasicMenu' : undefined
+                            }
+                            aria-haspopup="true"
+                            aria-expanded={rowCellOpen ? 'true' : undefined}
+                            onClick={e => handleRowToggleMenu(index, e)}
+                            disabled={
+                              isLoadingGetCaseList || isLoadingDeleteCaseList
+                            }
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                          <Menu
+                            id="rowCellBasicMenu"
+                            anchorEl={rowCellAnchorEl && rowCellAnchorEl[index]}
+                            open={Boolean(
+                              rowCellAnchorEl && rowCellAnchorEl[index]
+                            )}
+                            onClose={handleRowMenuClose}
+                            MenuListProps={{
+                              'aria-labelledby': 'rowCellBasicButton'
+                            }}
+                          >
+                            <MenuItem
+                              onClick={() => handleRowMenuDelete(row.id)}
+                            >
+                              <ListItemIcon>
+                                <DeleteIcon
+                                  fontSize="small"
+                                  sx={{ color: theme.palette.error.main }}
+                                />
+                              </ListItemIcon>
+                              <ListItemText
+                                sx={{ color: theme.palette.error.main }}
+                              >
+                                Deletar
+                              </ListItemText>
+                            </MenuItem>
+                            <MenuItem>
+                              <ListItemLink
+                                to={`/servicos/${row.id}`}
+                                primary="Editar"
+                                icon={<EditIcon fontSize="small" />}
+                              />
+                            </MenuItem>
+                          </Menu>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
+                )}
               </TableBody>
             ) : (
               <TableBody>
-                <MuiTableRow>
-                  <TableCell colSpan={999}>
-                    Nenhum serviço encontrado.
-                  </TableCell>
-                </MuiTableRow>
+                <TableRow>
+                  <TableCell colSpan={999}>Nenhuma case encontrada.</TableCell>
+                </TableRow>
               </TableBody>
             )}
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 50, 100, { value: -1, label: 'Todos' }]}
+          rowsPerPageOptions={[10, 3, 100, { value: -1, label: 'Todos' }]}
           component="div"
           page={pageRows}
           rowsPerPage={perPageRows}

@@ -1,14 +1,44 @@
 import * as React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom'
 
-import { NotFound } from '../../pages/404'
 import { Login } from '../../pages/Login'
+import { useAppSelector } from '../../redux'
 
-export const AccessRoutes: React.FC = () => {
+const RequireAuth = ({ children }: { children: JSX.Element }) => {
+  const { checkAuthenticationAuthenticated } = useAppSelector(
+    state => state.access
+  )
+  const location = useLocation()
+
+  if (!checkAuthenticationAuthenticated) {
+    return <Navigate to="/" state={{ from: location }} replace />
+  }
+
+  return children
+}
+const RequireNotAuth = ({ children }: { children: JSX.Element }) => {
+  const { checkAuthenticationAuthenticated } = useAppSelector(
+    state => state.access
+  )
+  const location = useLocation()
+
+  if (checkAuthenticationAuthenticated) {
+    return <Navigate to="/" state={{ from: location }} replace />
+  }
+
+  return children
+}
+export const AccessRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="/"
+        element={
+          <RequireNotAuth>
+            <Login />
+          </RequireNotAuth>
+        }
+      />
     </Routes>
   )
 }

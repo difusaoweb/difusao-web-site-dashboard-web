@@ -10,10 +10,11 @@ import {
 } from '../redux'
 
 async function getAttachmentList({
-  page
+  page,
+  perPage
 }: ReduxAttachmentsGetAttachmentListServiceParameters): Promise<AxiosResponse> {
   return await api.get('/attachments/list', {
-    params: { page, per_page: 10 }
+    params: { page, per_page: perPage }
   })
 }
 

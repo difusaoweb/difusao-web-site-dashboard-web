@@ -42,9 +42,7 @@ export function servicesReducer(
         getServiceListServices,
         getServiceListLastPage: action.payload.success?.lastPage ?? null,
         getServiceListTotal: action.payload.success?.total ?? null,
-        getServiceListError: action.payload.failure,
-        deleteServiceListDeleted: null,
-        deleteServiceListError: null
+        getServiceListError: action.payload.failure
       }
     }
     case REDUX_SERVICES_DELETE_SERVICE_LIST: {

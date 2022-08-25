@@ -4,8 +4,7 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemButton,
-  Collapse,
-  listItemIconClasses
+  Collapse
 } from '@mui/material'
 import {
   Dashboard as DashboardIcon,
@@ -21,7 +20,7 @@ import { useLocation } from 'react-router-dom'
 export const ListItems = () => {
   const { pathname } = useLocation()
 
-  const [selectedIndex, setSelectedIndex] = React.useState(pathname)
+  const [selectedIndex] = React.useState(pathname)
   const [selectedIndexCollapse, setSelectedIndexCollapse] = React.useState<
     string | null
   >(null)
@@ -87,7 +86,9 @@ export const ListItems = () => {
         <ListItemText primary="Dashboard" />
       </ListItemButton>
       {listItemIconClasses.map(item => (
-        <>
+        <div
+          key={`listItemButton-${item.link}${Math.floor(Math.random() * 1000)}`}
+        >
           <ListItemButton
             selected={selectedIndexCollapse === item.link}
             onClick={() => handleSetItemCollapse(item.link)}
@@ -124,7 +125,7 @@ export const ListItems = () => {
               </ListItemButton>
             </List>
           </Collapse>
-        </>
+        </div>
       ))}
     </>
   )

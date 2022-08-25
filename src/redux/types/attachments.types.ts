@@ -1,4 +1,4 @@
-import { ErrorStatusOrNull } from './common.types'
+import { NumberOrNull, BooleanOrNull, ErrorStatusOrNull } from './common.types'
 
 export interface AttachmentData {
   id: number
@@ -9,11 +9,17 @@ export interface AttachmentData {
 
 export interface ReduxAttachmentsGetAttachmentListServiceParameters {
   page: number
+  perPage: number
 }
+export type ReduxAttachmentsGetAttachmentListFunctionDispatch = ReturnType<
+  typeof AttachmentActionTypes | typeof AlertActionTypes
+>
 export interface ReduxAttachmentsGetAttachmentListReducerPayload {
   success: {
     attachments: AttachmentData[]
+    currentPage: number
     lastPage: number
+    total: number
   } | null
   failure: ErrorStatusOrNull
 }
@@ -21,6 +27,9 @@ export interface ReduxAttachmentsGetAttachmentListReducerPayload {
 export interface ReduxAttachmentsGetAttachmentServiceParameters {
   attachmentId: number
 }
+export type ReduxAttachmentsGetAttachmentFunctionDispatch = ReturnType<
+  typeof AttachmentActionTypes | typeof AlertActionTypes
+>
 export interface ReduxAttachmentsGetAttachmentReducerPayload {
   success: {
     attachment: AttachmentData
@@ -33,6 +42,9 @@ export interface ReduxAttachmentsCreateAttachmentServiceParameters {
   description: string
   image: number
 }
+export type ReduxAttachmentsCreateAttachmentFunctionDispatch = ReturnType<
+  typeof AttachmentActionTypes | typeof AlertActionTypes
+>
 export interface ReduxAttachmentsCreateAttachmentReducerPayload {
   success: {
     attachmentId: number
@@ -44,6 +56,9 @@ export interface ReduxAttachmentsUpdateAttachmentServiceParameters {
   attachmentId: number
   attachmentTitle: string
 }
+export type ReduxAttachmentsUpdateAttachmentFunctionDispatch = ReturnType<
+  typeof AttachmentActionTypes | typeof AlertActionTypes
+>
 export interface ReduxAttachmentsUpdateAttachmentReducerPayload {
   success: {
     updated: boolean
@@ -54,6 +69,9 @@ export interface ReduxAttachmentsUpdateAttachmentReducerPayload {
 export interface ReduxAttachmentsDeleteAttachmentListServiceParameters {
   attachmentsId: number[]
 }
+export type ReduxAttachmentsDeleteAttachmentListFunctionDispatch = ReturnType<
+  typeof AttachmentActionTypes | typeof AlertActionTypes
+>
 export interface ReduxAttachmentsDeleteAttachmentListReducerPayload {
   success: {
     deleted: boolean
@@ -109,19 +127,20 @@ interface ReduxAttachmentsClearStateReducer {
 
 export interface AttachmentState {
   getAttachmentListAttachments: AttachmentData[] | null
-  getAttachmentListLastPage: number | null
+  getAttachmentListLastPage: NumberOrNull
+  getAttachmentListTotal: NumberOrNull
   getAttachmentListError: ErrorStatusOrNull
 
   getAttachmentAttachment: AttachmentData | null
   getAttachmentError: ErrorStatusOrNull
 
-  createAttachmentAttachmentId: number | null
+  createAttachmentAttachmentId: NumberOrNull
   createAttachmentError: ErrorStatusOrNull
 
-  updateAttachmentUpdated: boolean | null
+  updateAttachmentUpdated: BooleanOrNull
   updateAttachmentError: ErrorStatusOrNull
 
-  deleteAttachmentListDeleted: boolean | null
+  deleteAttachmentListDeleted: BooleanOrNull
   deleteAttachmentListError: ErrorStatusOrNull
 }
 

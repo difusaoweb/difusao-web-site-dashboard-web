@@ -1,18 +1,21 @@
 import * as React from 'react'
-import { useSelector, useDispatch } from 'react-redux'
 import { Snackbar, Alert as AlertMui } from '@mui/material'
 
-import { setAlert, RootState } from '../../../redux'
+import {
+  useAppDispatch,
+  useAppSelector,
+  reduxAlertsSetAlertFunction
+} from '../../../redux'
 
 export const Alert: React.FC = () => {
-  const { alert } = useSelector((state: ReturnType<RootState>) => state.alerts)
-  const dispatch = useDispatch()
+  const { alert } = useAppSelector(state => state.alerts)
+  const dispatch = useAppDispatch()
 
   const [openAlertNotification, setOpenAlertNotification] =
     React.useState(false)
 
   async function onDismiss() {
-    await dispatch(setAlert(null))
+    await dispatch(reduxAlertsSetAlertFunction(null))
     setOpenAlertNotification(false)
   }
 

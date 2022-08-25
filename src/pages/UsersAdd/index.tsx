@@ -39,7 +39,7 @@ export const UsersAdd: React.FC = () => {
   // const [categoryId, setCategoryId] = React.useState<number | null>(null)
 
   // const [loadingCreateService, setLoadingCreateService] = React.useState(false)
-  // const [alertCreateService, setAlertCreateService] = React.useState(false)
+  // const [alertCreateService, reduxAlertsSetAlertFunctionCreateService] = React.useState(false)
 
   // async function addNewService() {
   //   if (loadingCreateService) {
@@ -59,7 +59,7 @@ export const UsersAdd: React.FC = () => {
   //         price
   //       })
   //     )
-  //     setAlertCreateService(true)
+  //     reduxAlertsSetAlertFunctionCreateService(true)
   //     setLoadingCreateService(false)
   //   }
   // }
@@ -132,7 +132,7 @@ export const UsersAdd: React.FC = () => {
   //     </Box>
   //     <Snackbar open={alertCreateService} autoHideDuration={500}>
   //       <Alert
-  //         onClose={() => setAlertCreateService(false)}
+  //         onClose={() => reduxAlertsSetAlertFunctionCreateService(false)}
   //         severity={createServiceReturn.success ? 'success' : 'error'}
   //         sx={{ width: '100%' }}
   //       >

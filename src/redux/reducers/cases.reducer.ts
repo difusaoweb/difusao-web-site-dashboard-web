@@ -1,18 +1,62 @@
-import { GET_CASES, CasesActionTypes, CasesState } from '../types'
+import {
+  CaseState,
+  CaseActionTypes,
+  REDUX_CASES_GET_CASE_LIST,
+  REDUX_CASES_DELETE_CASE_LIST,
+  REDUX_CASES_CREATE_CASE
+} from '../types'
 
-const initialState: CasesState = {
-  casesList: null
+const initialState: CaseState = {
+  getCaseListCases: null,
+  getCaseListLastPage: null,
+  getCaseListTotal: null,
+  getCaseListError: null,
+  deleteCaseListDeleted: null,
+  deleteCaseListError: null,
+  createCaseCaseId: null,
+  createCaseError: null
 }
 
 export function casesReducer(
-  state: CasesState = initialState,
-  action: CasesActionTypes
-): CasesState {
+  state: CaseState = initialState,
+  action: CaseActionTypes
+): CaseState {
   switch (action.type) {
-    case GET_CASES: {
+    case REDUX_CASES_GET_CASE_LIST: {
+      let getCaseListCases = state.getCaseListCases
+      if (action.payload.success) {
+        const { currentPage, cases } = action.payload.success
+
+        if (getCaseListCases) {
+          if (currentPage === 1) {
+            getCaseListCases = cases
+          } else {
+            getCaseListCases = [...getCaseListCases, ...cases]
+          }
+        } else {
+          getCaseListCases = cases
+        }
+      }
       return {
         ...state,
-        casesList: action.payload ?? null
+        getCaseListCases,
+        getCaseListLastPage: action.payload.success?.lastPage ?? null,
+        getCaseListTotal: action.payload.success?.total ?? null,
+        getCaseListError: action.payload.failure
+      }
+    }
+    case REDUX_CASES_DELETE_CASE_LIST: {
+      return {
+        ...state,
+        deleteCaseListDeleted: action.payload.success?.deleted ?? null,
+        deleteCaseListError: action.payload.failure
+      }
+    }
+    case REDUX_CASES_CREATE_CASE: {
+      return {
+        ...state,
+        createCaseCaseId: action.payload.success?.caseId ?? null,
+        createCaseError: action.payload.failure
       }
     }
     default:

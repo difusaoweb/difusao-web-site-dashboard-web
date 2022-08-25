@@ -31,7 +31,7 @@ export const AttachmentListPage: React.FC = () => {
           }}
         >
           <Toolbar />
-          <Container maxWidth="lg" sx={{ mt: 4, pb: 4 }}>
+          <Container maxWidth="xl" sx={{ mt: 4, pb: 4 }}>
             <Box
               sx={{ display: 'flex', alignItens: 'center', marginBottom: 5 }}
             >
@@ -50,7 +50,7 @@ export const AttachmentListPage: React.FC = () => {
                   startIcon={<AddIcon />}
                   href="/midias/adicionar/"
                 >
-                  Novo Mídia
+                  Nova Mídia
                 </Button>
               </Box>
             </Box>

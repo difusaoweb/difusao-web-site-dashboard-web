@@ -6,30 +6,30 @@ import {
   ReduxServicesGetServiceListReducerPayload,
   REDUX_SERVICES_GET_SERVICE_LIST,
   ReduxServicesGetServiceListServiceParameters,
+  ReduxServicesGetServiceListFunctionDispatch,
   ReduxServicesDeleteServiceListReducerPayload,
   REDUX_SERVICES_DELETE_SERVICE_LIST,
   ReduxServicesDeleteServiceListServiceParameters,
+  ReduxServicesDeleteServiceListFunctionDispatch,
   ReduxServicesCreateServiceReducerPayload,
   REDUX_SERVICES_CREATE_SERVICE,
-  ReduxServicesCreateServiceServiceParameters
+  ReduxServicesCreateServiceServiceParameters,
+  ReduxServicesCreateServiceFunctionDispatch
 } from '../types'
 import { servicesService } from '../../services'
-import { setAlert } from './alerts.actions'
+import { reduxAlertsSetAlertFunction } from './alerts.actions'
 
 const reduxServicesGetServiceListAction: ActionCreator<ServiceActionTypes> = (
   payload: ReduxServicesGetServiceListReducerPayload
 ) => {
   return { type: REDUX_SERVICES_GET_SERVICE_LIST, payload }
 }
-type reduxServicesGetServiceListFunctionType = ReturnType<
-  typeof ServiceActionTypes | typeof AlertActionTypes
->
 export function reduxServicesGetServiceListFunction({
   page,
   perPage
 }: ReduxServicesGetServiceListServiceParameters) {
   return async (
-    dispatch: Dispatch<reduxServicesGetServiceListFunctionType>
+    dispatch: Dispatch<ReduxServicesGetServiceListFunctionDispatch>
   ) => {
     try {
       const { data } = await servicesService.getServiceList({ page, perPage })
@@ -56,7 +56,7 @@ export function reduxServicesGetServiceListFunction({
         case 404:
           break
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(reduxAlertsSetAlertFunction({ type: 'error', message: 'Erro desconhecido!' }))
           break
       }
 
@@ -75,14 +75,11 @@ const reduxServicesDeleteServiceListAction: ActionCreator<
 > = (payload: ReduxServicesDeleteServiceListReducerPayload) => {
   return { type: REDUX_SERVICES_DELETE_SERVICE_LIST, payload }
 }
-type reduxServicesDeleteServiceListFunctionType = ReturnType<
-  typeof ServiceActionTypes | typeof AlertActionTypes
->
 export function reduxServicesDeleteServiceListFunction({
   servicesId
 }: ReduxServicesDeleteServiceListServiceParameters) {
   return async (
-    dispatch: Dispatch<reduxServicesDeleteServiceListFunctionType>
+    dispatch: Dispatch<ReduxServicesDeleteServiceListFunctionDispatch>
   ) => {
     try {
       const { data } = await servicesService.deleteServiceList({ servicesId })
@@ -105,7 +102,7 @@ export function reduxServicesDeleteServiceListFunction({
 
       switch (status) {
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(reduxAlertsSetAlertFunction({ type: 'error', message: 'Erro desconhecido!' }))
           break
       }
 
@@ -124,13 +121,12 @@ const reduxServicesCreateServiceAction: ActionCreator<ServiceActionTypes> = (
 ) => {
   return { type: REDUX_SERVICES_CREATE_SERVICE, payload }
 }
-type reduxServicesCreateServiceFunctionType = ReturnType<
-  typeof ServiceActionTypes | typeof AlertActionTypes
->
 export function reduxServicesCreateServiceFunction(
   parameters: ReduxServicesCreateServiceServiceParameters
 ) {
-  return async (dispatch: Dispatch<reduxServicesCreateServiceFunctionType>) => {
+  return async (
+    dispatch: Dispatch<ReduxServicesCreateServiceFunctionDispatch>
+  ) => {
     try {
       const { data } = await servicesService.createService(parameters)
       const serviceId = data?.success?.service_id
@@ -152,7 +148,7 @@ export function reduxServicesCreateServiceFunction(
 
       switch (status) {
         default:
-          dispatch(setAlert({ type: 'error', message: 'Erro desconhecido!' }))
+          dispatch(reduxAlertsSetAlertFunction({ type: 'error', message: 'Erro desconhecido!' }))
           break
       }
 
