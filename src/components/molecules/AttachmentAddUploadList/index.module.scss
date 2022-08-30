@@ -1,12 +1,20 @@
 .container {
   width: 100%;
   background-color: 'background.paper';
-
-  .listItemImagePreview {
-    width: 80px;
-    height: 80px;
-  }
-  .listItemInfo {
-    margin-left: 16px;
+  border-radius: 3px;
+  
+  .listItem {
+    border-bottom: 1px solid #515151;
+    &:last-child {
+      border-bottom: unset;
+    }
+    
+    .listItemImagePreview {
+      width: 80px;
+      height: 80px;
+    }
+    .listItemInfo {
+      margin-left: 16px;
+    }
   }
 }

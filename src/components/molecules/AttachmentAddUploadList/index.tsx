@@ -6,7 +6,8 @@ import {
   ListItemAvatar,
   Avatar,
   Button,
-  Alert
+  Alert,
+  Divider
 } from '@mui/material'
 import ImageIcon from '@mui/icons-material/Image'
 import WorkIcon from '@mui/icons-material/Work'
@@ -25,29 +26,34 @@ export const AttachmentAddUploadList = ({
   if (!uploadedFiles) return <></>
 
   return (
-    <List className={styles.container}>
+    <List
+      className={styles.container}
+      sx={{ backgroundColor: 'background.paper' }}
+    >
       {uploadedFiles.map(file => (
-        <ListItem key={file.id}>
-          <ListItemAvatar>
-            <img src={file.preview} className={styles.listItemImagePreview} />
-          </ListItemAvatar>
-          <ListItemText
-            primary={file.name}
-            secondary={file.readableSize}
-            className={styles.listItemInfo}
-          />
-          {!file.uploaded && !file.error && (
-            <ProgressBar value={file.progress} />
-          )}
-          {file.error && (
-            <Alert severity="error">Erro ao enviar está mídia!</Alert>
-          )}
-          {file.uploaded && (
-            <Button variant="text" href={`/midias/${file.id}`}>
-              Editar
-            </Button>
-          )}
-        </ListItem>
+        <>
+          <ListItem key={file.id} className={styles.listItem}>
+            <ListItemAvatar>
+              <img src={file.preview} className={styles.listItemImagePreview} />
+            </ListItemAvatar>
+            <ListItemText
+              primary={file.name}
+              secondary={file.readableSize}
+              className={styles.listItemInfo}
+            />
+            {!file.uploaded && !file.error && (
+              <ProgressBar value={file.progress} />
+            )}
+            {file.error && (
+              <Alert severity="error">Erro ao enviar está mídia!</Alert>
+            )}
+            {file.uploaded && (
+              <Button variant="text" href={`/midias/${file.id}`}>
+                Editar
+              </Button>
+            )}
+          </ListItem>
+        </>
       ))}
     </List>
   )
