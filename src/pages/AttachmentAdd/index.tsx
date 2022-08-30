@@ -80,11 +80,9 @@ export const AttachmentAddPage: React.FC = () => {
         >
           <Toolbar />
           <Container maxWidth="lg" className={styles.container}>
-            <Box
-              sx={{ display: 'flex', alignItens: 'center', marginBottom: 5 }}
-            >
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography component="h1" sx={{ fontWeight: 'bold' }}>
+            <Box className={styles.pageTopBar}>
+              <Box className={styles.box}>
+                <Typography component="h1" className={styles.titlePage}>
                   Enviar nova mídia
                 </Typography>
                 <Typography component="p">
@@ -94,14 +92,17 @@ export const AttachmentAddPage: React.FC = () => {
             </Box>
             <Grid container spacing={3}>
               <Grid item xs={12}>
-                <Paper sx={{ width: '100%', mb: 3, padding: 3 }}>
+                <Paper className={styles.paper}>
                   <AttachmentAddUploadArea
                     uploadedFiles={uploadedFiles}
                     setUploadedFiles={setUploadedFiles}
                     setIsOnCreateAttachment={setIsOnCreateAttachment}
                   />
                   {uploadedFiles && (
-                    <AttachmentAddUploadList uploadedFiles={uploadedFiles} />
+                    <>
+                      <div className={styles.space} />
+                      <AttachmentAddUploadList uploadedFiles={uploadedFiles} />
+                    </>
                   )}
                 </Paper>
               </Grid>
