@@ -1,10 +1,22 @@
 import { NumberOrNull, BooleanOrNull, ErrorStatusOrNull } from './common.types'
 
+export interface UploadedFileType {
+  file: File
+  id: number
+  name: string
+  readableSize: string
+  preview: string
+  progress: number
+  uploaded: boolean
+  error: boolean
+  url: string | null
+}
+
 export interface AttachmentData {
   id: number
   title: string
   source: string
-  created_at: string
+  createdAt: string
 }
 
 export interface ReduxAttachmentsGetAttachmentListServiceParameters {
@@ -38,16 +50,18 @@ export interface ReduxAttachmentsGetAttachmentReducerPayload {
 }
 
 export interface ReduxAttachmentsCreateAttachmentServiceParameters {
-  title: string
-  description: string
-  image: number
+  file: UploadedFileType
+  // setUploadedFiles(uploadedFiles: UploadedFileType[] | null): void
+  setUploadedFiles: React.Dispatch<
+    React.SetStateAction<UploadedFileType[] | null>
+  >
 }
 export type ReduxAttachmentsCreateAttachmentFunctionDispatch = ReturnType<
   typeof AttachmentActionTypes | typeof AlertActionTypes
 >
 export interface ReduxAttachmentsCreateAttachmentReducerPayload {
   success: {
-    attachmentId: number
+    attachment: AttachmentData
   } | null
   failure: ErrorStatusOrNull
 }
@@ -62,6 +76,8 @@ export type ReduxAttachmentsUpdateAttachmentFunctionDispatch = ReturnType<
 export interface ReduxAttachmentsUpdateAttachmentReducerPayload {
   success: {
     updated: boolean
+    attachmentId: number
+    attachmentTitle: string
   } | null
   failure: ErrorStatusOrNull
 }
@@ -134,7 +150,6 @@ export interface AttachmentState {
   getAttachmentAttachment: AttachmentData | null
   getAttachmentError: ErrorStatusOrNull
 
-  createAttachmentAttachmentId: NumberOrNull
   createAttachmentError: ErrorStatusOrNull
 
   updateAttachmentUpdated: BooleanOrNull

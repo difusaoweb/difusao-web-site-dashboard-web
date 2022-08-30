@@ -23,7 +23,8 @@ import {
   REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST,
   ReduxAttachmentsDeleteAttachmentListServiceParameters,
   ReduxAttachmentsDeleteAttachmentListFunctionDispatch,
-  REDUX_ATTACHMENTS_CLEAR_STATE
+  REDUX_ATTACHMENTS_CLEAR_STATE,
+  UploadedFileType
 } from '../types'
 import { attachmentsService } from '../../services'
 import { reduxAlertsSetAlertFunction } from './alerts.actions'
@@ -145,20 +146,44 @@ const reduxAttachmentsCreateAttachmentAction: ActionCreator<
 > = (payload: ReduxAttachmentsCreateAttachmentReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_CREATE_ATTACHMENT, payload }
 }
-export function reduxAttachmentsCreateAttachmentFunction(
-  parameters: ReduxAttachmentsCreateAttachmentServiceParameters
-) {
+export function reduxAttachmentsCreateAttachmentFunction({
+  file,
+  setUploadedFiles
+}: ReduxAttachmentsCreateAttachmentServiceParameters) {
   return async (
     dispatch: Dispatch<ReduxAttachmentsCreateAttachmentFunctionDispatch>
   ) => {
     try {
-      const { data } = await attachmentsService.createAttachment(parameters)
-      const attachmentId = data?.success?.attachment_id
+      const { data } = await attachmentsService.createAttachment({
+        file,
+        setUploadedFiles
+      })
+      const attachment = data?.success?.attachment
+
+      setUploadedFiles((uploadedFiles: UploadedFileType[] | null) => {
+        if (!uploadedFiles) return null
+        return uploadedFiles.map(uploadedFile => {
+          return uploadedFile.id === file.id
+            ? {
+                ...uploadedFile,
+                id: attachment.id,
+                uploaded: true,
+                url: attachment.source
+              }
+            : uploadedFile
+        })
+      })
 
       dispatch(
         reduxAttachmentsCreateAttachmentAction({
-          success: { attachmentId },
+          success: { attachment },
           failure: null
+        })
+      )
+      dispatch(
+        reduxAlertsSetAlertFunction({
+          type: 'success',
+          message: 'Mídia enviada!'
         })
       )
     } catch (err) {
@@ -169,6 +194,15 @@ export function reduxAttachmentsCreateAttachmentFunction(
         err as AxiosError
         status = err.response?.status ?? null
       }
+
+      setUploadedFiles((uploadedFiles: UploadedFileType[] | null) => {
+        if (!uploadedFiles) return null
+        return uploadedFiles.map(uploadedFile => {
+          return uploadedFile.id === file.id
+            ? { ...uploadedFile, error: true }
+            : uploadedFile
+        })
+      })
 
       switch (status) {
         default:
@@ -196,19 +230,24 @@ const reduxAttachmentsUpdateAttachmentAction: ActionCreator<
 > = (payload: ReduxAttachmentsUpdateAttachmentReducerPayload) => {
   return { type: REDUX_ATTACHMENTS_UPDATE_ATTACHMENT, payload }
 }
-export function reduxAttachmentsUpdateAttachmentFunction(
-  parameters: ReduxAttachmentsUpdateAttachmentServiceParameters
-) {
+export function reduxAttachmentsUpdateAttachmentFunction({
+  attachmentId,
+  attachmentTitle
+}: ReduxAttachmentsUpdateAttachmentServiceParameters) {
   return async (
     dispatch: Dispatch<ReduxAttachmentsUpdateAttachmentFunctionDispatch>
   ) => {
     try {
-      const { data } = await attachmentsService.updateAttachment(parameters)
-      const attachmentId = data?.success?.attachment_id
+      const { data } = await attachmentsService.updateAttachment({
+        attachmentId,
+        attachmentTitle
+      })
+
+      const updated = data?.success?.updated
 
       dispatch(
         reduxAttachmentsUpdateAttachmentAction({
-          success: { attachmentId },
+          success: { updated, attachmentId, attachmentTitle },
           failure: null
         })
       )

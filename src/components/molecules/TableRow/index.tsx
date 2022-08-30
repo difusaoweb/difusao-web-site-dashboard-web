@@ -21,6 +21,7 @@ import {
 
 import { ListItemLink } from '../../atoms/ListItemLink'
 import { ServiceData } from '../../../redux'
+import styles from './index.module.scss'
 
 interface TableRowProps {
   row: ServiceData

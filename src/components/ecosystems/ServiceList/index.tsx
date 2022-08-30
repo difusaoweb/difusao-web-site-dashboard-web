@@ -294,7 +294,6 @@ export const ServiceList = () => {
 
   function handleDeleteAllSelectedRows() {
     setSelectedsDestroy(selecteds)
-    handleRowMenuClose()
   }
 
   function handleRowCheckbox(id: number) {
@@ -343,11 +342,12 @@ export const ServiceList = () => {
   function setRowsTable() {
     setIsSetRowsTable(false)
     if (getServiceListServices) {
+      if (!getServiceListTotal) return
       setRows(
         getServiceListServices.slice(
           pageRows * perPageRows,
           pageRows * perPageRows +
-            (perPageRows === -1 ? rows?.length ?? 0 : perPageRows)
+            (perPageRows === -1 ? getServiceListTotal : perPageRows)
         )
       )
     } else {

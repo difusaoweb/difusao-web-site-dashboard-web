@@ -5,6 +5,8 @@ import {
   LinkProps as RouterLinkProps
 } from 'react-router-dom'
 
+import styles from './index.module.scss'
+
 interface ListItemLinkProps {
   icon?: React.ReactElement
   primary: string
@@ -26,7 +28,7 @@ export const ListItemLink = (props: ListItemLinkProps) => {
   )
 
   return (
-    <ListItem button component={renderLink}>
+    <ListItem button component={renderLink} className={styles.menuEditar}>
       {icon ? <ListItemIcon>{icon}</ListItemIcon> : null}
       <ListItemText primary={primary} />
     </ListItem>

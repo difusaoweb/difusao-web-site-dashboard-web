@@ -12,10 +12,10 @@ import {
 const initialState: AttachmentState = {
   getAttachmentListAttachments: null,
   getAttachmentListLastPage: null,
+  getAttachmentListTotal: null,
   getAttachmentListError: null,
   getAttachmentAttachment: null,
   getAttachmentError: null,
-  createAttachmentAttachmentId: null,
   createAttachmentError: null,
   updateAttachmentUpdated: null,
   updateAttachmentError: null,
@@ -62,18 +62,44 @@ export function attachmentsReducer(
       }
     }
     case REDUX_ATTACHMENTS_CREATE_ATTACHMENT: {
+      if (!state.getAttachmentListAttachments) return { ...state }
+      if (!action.payload.success) return { ...state }
+
+      const attachments = state.getAttachmentListAttachments
+      const getAttachmentListAttachments = attachments.concat(
+        action.payload.success.attachment
+      )
       return {
         ...state,
-        createAttachmentAttachmentId:
-          action.payload.success?.attachmentId ?? null,
+        getAttachmentListAttachments,
         createAttachmentError: action.payload.failure
       }
     }
     case REDUX_ATTACHMENTS_UPDATE_ATTACHMENT: {
-      return {
-        ...state,
-        updateAttachmentUpdated: action.payload.success?.updated ?? null,
-        updateAttachmentError: action.payload.failure
+      if (action.payload.success) {
+        if (!state.getAttachmentListAttachments) return { ...state }
+
+        const { updated, attachmentId, attachmentTitle } =
+          action.payload.success
+
+        const getAttachmentListAttachments = state.getAttachmentListAttachments
+        const attachmentIndex = getAttachmentListAttachments.findIndex(
+          attachment => attachmentId === attachment.id
+        )
+
+        Object.freeze(getAttachmentListAttachments)
+        getAttachmentListAttachments[attachmentIndex].title = attachmentTitle
+
+        return {
+          ...state,
+          getAttachmentListAttachments,
+          updateAttachmentUpdated: updated ?? null
+        }
+      } else {
+        return {
+          ...state,
+          updateAttachmentError: action.payload.failure
+        }
       }
     }
     case REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST: {

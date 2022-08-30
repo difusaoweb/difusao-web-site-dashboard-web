@@ -1,0 +1,18 @@
+.containerGeneral {
+  display: flex;
+
+  .main {
+    flex-grow: 1;
+    height: 100vh;
+    overflow: auto;
+
+    .container {
+      margin-top: 4px;
+      padding-bottom: 4px;
+
+      .mb16{
+        margin-bottom: 16px !important;
+      }
+    }
+  }
+}

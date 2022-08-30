@@ -1,101 +1,31 @@
 import * as React from 'react'
-import { alpha, useTheme } from '@mui/material/styles'
-import {
-  ImageListItem,
-  ImageListItemBar,
-  Checkbox,
-  Paper,
-  Toolbar,
-  Typography,
-  Tooltip,
-  IconButton,
-  CircularProgress
-} from '@mui/material'
-import InfiniteScroll from 'react-infinite-scroll-component'
-import { Replay as ReplayIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Paper, TablePagination } from '@mui/material'
 
 import { ModalImage } from '../../molecules/ModalImage'
 import {
   useAppSelector,
   reduxAttachmentsGetAttachmentListFunction,
   reduxAttachmentsDeleteAttachmentListFunction,
-  useAppDispatch
+  useAppDispatch,
+  AttachmentData
 } from '../../../redux'
 import { Loading } from '../../atoms/Loading'
-
-interface EnhancedTableToolbarProps {
-  loading: boolean
-  numSelected: number
-  handleReloadCard(): void
-  handleDeleteAllSelected(): void
-}
-const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
-  const { loading, numSelected, handleReloadCard, handleDeleteAllSelected } =
-    props
-
-  return (
-    <Toolbar
-      sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
-        ...(numSelected > 0 && {
-          bgcolor: theme =>
-            alpha(
-              theme.palette.primary.main,
-              theme.palette.action.activatedOpacity
-            )
-        })
-      }}
-    >
-      {numSelected > 0 ? (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          color="inherit"
-          variant="subtitle1"
-          component="div"
-        >
-          {numSelected} selecionados
-        </Typography>
-      ) : (
-        <Typography
-          sx={{ flex: '1 1 100%' }}
-          variant="h6"
-          id="tableTitle"
-          component="div"
-        >
-          Mídias
-        </Typography>
-      )}
-      {numSelected > 0 ? (
-        <Tooltip title="Deletar">
-          <IconButton onClick={handleDeleteAllSelected}>
-            <DeleteIcon />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Recarregar lista">
-          {loading ? (
-            <CircularProgress size={24} sx={{ margin: 1 }} />
-          ) : (
-            <IconButton onClick={handleReloadCard}>
-              <ReplayIcon />
-            </IconButton>
-          )}
-        </Tooltip>
-      )}
-    </Toolbar>
-  )
-}
+import { AttachmentTableTopbar } from '../../molecules/AttachmentTableTopbar'
+import { AttachmentCardImage } from '../../molecules/AttachmentCardImage'
+import styles from './index.module.scss'
 
 export const AttachmentList = () => {
-  const { getAttachmentListAttachments, getAttachmentListLastPage } =
-    useAppSelector(state => state.attachments)
+  const {
+    getAttachmentListAttachments,
+    getAttachmentListLastPage,
+    getAttachmentListTotal,
+    deleteAttachmentListDeleted,
+    deleteAttachmentListError
+  } = useAppSelector(state => state.attachments)
   const dispatch = useAppDispatch()
-  const theme = useTheme()
 
+  const [rows, setRows] = React.useState<AttachmentData[] | null>(null)
   const [isOnGetAttachmentList, setIsOnGetAttachmentList] = React.useState(true)
-  const [page, setPage] = React.useState(1)
-  const [perPage, setPerPage] = React.useState(50)
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
   const [isLoadingGetAttachmentList, setIsLoadingGetAttachmentList] =
     React.useState(false)
@@ -104,54 +34,76 @@ export const AttachmentList = () => {
   const [idImageOpenModal, setIdImageOpenModal] = React.useState<number | null>(
     null
   )
+  const [selectedsDestroy, setSelectedsDestroy] = React.useState<
+    number[] | null
+  >(null)
+  const [isSetRowsTable, setIsSetRowsTable] = React.useState(false)
+  const [countAllRows, setCountAllRows] = React.useState(0)
+  const [pageQuery, setPageQuery] = React.useState(1)
+  const [pageRows, setPageRows] = React.useState(0)
+  const [perPageRows, setPerPageRows] = React.useState(50)
+
+  function handleChangePage(thePage: number) {
+    setPageRows(thePage)
+    if (thePage === pageQuery) {
+      setPageQuery(page => page + 1)
+      setIsOnGetAttachmentList(true)
+    } else {
+      setSelectedsDestroy(null)
+      setIsSetRowsTable(true)
+    }
+    setSelecteds(null)
+  }
+
+  function setRowsTable() {
+    setIsSetRowsTable(false)
+    if (getAttachmentListAttachments) {
+      if (!getAttachmentListTotal) return
+      setRows(
+        getAttachmentListAttachments.slice(
+          pageRows * perPageRows,
+          pageRows * perPageRows +
+            (perPageRows === -1 ? getAttachmentListTotal : perPageRows)
+        )
+      )
+    } else {
+      setRows(null)
+    }
+    setCountAllRows(getAttachmentListTotal ?? 0)
+  }
+
+  function handleChangeRowsPerPage(thePerPage: number) {
+    setPerPageRows(thePerPage)
+    setPageRows(0)
+    setPageQuery(1)
+    setSelecteds(null)
+    setSelectedsDestroy(null)
+    setIsOnGetAttachmentList(true)
+  }
+
+  function resetTable() {
+    setPageQuery(1)
+    setPageRows(0)
+    setSelecteds(null)
+    setSelectedsDestroy(null)
+    setIsOnGetAttachmentList(true)
+  }
 
   const attachmentModal =
     getAttachmentListAttachments?.find(item => item.id === idImageOpenModal) ??
     null
-
-  function isSelected(id: number) {
-    if (selecteds) {
-      return selecteds.indexOf(id) !== -1
-    }
-    return false
-  }
-
-  function handleToggleCheckbox(id: number) {
-    if (selecteds) {
-      const selectedIndex = selecteds.indexOf(id)
-      let newSelecteds: number[] = []
-
-      if (selectedIndex === -1) {
-        newSelecteds = newSelecteds.concat(selecteds, id)
-      } else if (selectedIndex === 0) {
-        newSelecteds = newSelecteds.concat(selecteds.slice(1))
-      } else if (selectedIndex === selecteds.length - 1) {
-        newSelecteds = newSelecteds.concat(selecteds.slice(0, -1))
-      } else if (selectedIndex > 0) {
-        newSelecteds = newSelecteds.concat(
-          selecteds.slice(0, selectedIndex),
-          selecteds.slice(selectedIndex + 1)
-        )
-      }
-      setSelecteds(newSelecteds)
-    } else {
-      setSelecteds([id])
-    }
-  }
-
-  function handleReloadCard() {
-    console.log('handleReloadCard')
-    setPage(1)
-    setSelecteds(null)
-    setIsOnGetAttachmentList(true)
-  }
 
   async function onGetAttachmentList() {
     if (isLoadingGetAttachmentList) return
     setIsOnGetAttachmentList(false)
 
     setIsLoadingGetAttachmentList(true)
-    await dispatch(reduxAttachmentsGetAttachmentListFunction({ page, perPage }))
+    await dispatch(
+      reduxAttachmentsGetAttachmentListFunction({
+        page: pageQuery,
+        perPage: perPageRows
+      })
+    )
     setIsLoadingGetAttachmentList(false)
   }
 
@@ -172,88 +124,62 @@ export const AttachmentList = () => {
     onGetAttachmentList()
   }, [isOnGetAttachmentList])
 
+  React.useEffect(() => {
+    if (!getAttachmentListAttachments) return
+    setRowsTable()
+  }, [getAttachmentListAttachments])
+  React.useEffect(() => {
+    if (!isSetRowsTable) return
+    setRowsTable()
+  }, [isSetRowsTable])
+
+  React.useEffect(() => {
+    if (!selectedsDestroy) return
+    onDeleteAttachmentList()
+  }, [selectedsDestroy])
+
+  React.useEffect(() => {
+    if (!deleteAttachmentListDeleted) return
+    resetTable()
+  }, [deleteAttachmentListDeleted])
+
   return (
     <Paper sx={{ width: '100%', mb: 2 }}>
-      <EnhancedTableToolbar
+      <AttachmentTableTopbar
         numSelected={selecteds?.length ?? 0}
         loading={isLoadingGetAttachmentList || isLoadingDeleteAttachmentList}
-        handleReloadCard={handleReloadCard}
         handleDeleteAllSelected={onDeleteAttachmentList}
+        setSelecteds={setSelecteds}
+        attachments={rows}
+        setPage={setPageQuery}
+        setIsOnGetAttachmentList={setIsOnGetAttachmentList}
+        resetTable={resetTable}
       />
-      {getAttachmentListAttachments ? (
+      {rows ? (
         <>
-          <InfiniteScroll
-            dataLength={getAttachmentListAttachments.length}
-            next={() => setPage(page => page + 1)}
-            hasMore={
-              getAttachmentListLastPage
-                ? page < getAttachmentListLastPage
-                : false
+          <div className={styles.grid}>
+            {rows.map(attachment => (
+              <AttachmentCardImage
+                key={attachment.id}
+                attachment={attachment}
+                selecteds={selecteds}
+                setSelecteds={setSelecteds}
+                setIdImageOpenModal={setIdImageOpenModal}
+              />
+            ))}
+          </div>
+          <TablePagination
+            rowsPerPageOptions={[10, 50, 100, { value: -1, label: 'Todos' }]}
+            component="div"
+            page={pageRows}
+            rowsPerPage={perPageRows}
+            count={countAllRows}
+            onPageChange={(e, page) => handleChangePage(page)}
+            onRowsPerPageChange={e =>
+              handleChangeRowsPerPage(Number(e.target.value))
             }
-            loader={isLoadingGetAttachmentList ? <Loading /> : <></>}
-            // height={400}
-            style={{
-              display: 'grid',
-              overflowY: 'auto',
-              listStyle: 'none',
-              padding: 0,
-              gridTemplateColumns: 'repeat(5, 1fr)',
-              gap: 10
-            }}
-          >
-            <>
-              {getAttachmentListAttachments.map(item => {
-                const isItemSelected = isSelected(item.id)
-                return (
-                  <ImageListItem
-                    key={item.id}
-                    // sx={{ padding: 1, cursor: 'pointer', width: '14.28%' }}
-                    onClick={event => {
-                      // if (event.target !== event.currentTarget) return
-                      console.log('setIdImageOpenModal')
-                      setIdImageOpenModal(item.id)
-                    }}
-                  >
-                    <img
-                      src={`${item.source}?w=512&h=512&fit=crop&auto=format`}
-                      srcSet={`${item.source}?w=512&h=512&fit=crop&auto=format&dpr=2 2x`}
-                      // src={item.img}
-                      // srcSet={item.img}
-                      alt={item.title}
-                      loading="lazy"
-                    />
-                    <ImageListItemBar
-                      sx={{
-                        background:
-                          'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, ' +
-                          'rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%)'
-                      }}
-                      title={item.title}
-                      position="top"
-                      actionIcon={
-                        // <IconButton
-                        //   sx={{ color: 'white' }}
-                        //   aria-label={`star ${item.title}`}
-                        // >
-                        //   {isItemSelected ? <RemoveIcon /> : <CheckIcon />}
-                        // </IconButton>
-                        <Checkbox
-                          color="primary"
-                          checked={isItemSelected}
-                          onClick={event => {
-                            console.log('handleToggleCheckbox')
-                            handleToggleCheckbox(item.id)
-                            event.stopPropagation()
-                          }}
-                        />
-                      }
-                      actionPosition="left"
-                    />
-                  </ImageListItem>
-                )
-              })}
-            </>
-          </InfiniteScroll>
+            labelRowsPerPage="Linhas por páginas:"
+          />
           {idImageOpenModal && attachmentModal && (
             <ModalImage
               idImageOpenModal={idImageOpenModal}

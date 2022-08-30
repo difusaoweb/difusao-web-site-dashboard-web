@@ -1,0 +1,13 @@
+.grid {
+  display: grid;
+  list-style: none;
+  padding: 0 !important;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  padding-bottom: 26px;
+  overflow-y: hidden !important;
+  height: 100% !important;
+}
+.hidden {
+  display: none !important;
+}

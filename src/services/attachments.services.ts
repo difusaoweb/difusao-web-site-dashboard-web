@@ -8,6 +8,7 @@ import {
   ReduxAttachmentsUpdateAttachmentServiceParameters,
   ReduxAttachmentsDeleteAttachmentListServiceParameters
 } from '../redux'
+import { UploadedFileType } from '../redux/types'
 
 async function getAttachmentList({
   page,
@@ -27,15 +28,25 @@ async function getAttachment({
 }
 
 async function createAttachment({
-  title,
-  description,
-  image
+  file,
+  setUploadedFiles
 }: ReduxAttachmentsCreateAttachmentServiceParameters): Promise<AxiosResponse> {
-  return await api.get('/attachments/create', {
-    params: {
-      title,
-      description,
-      image
+  const data = new FormData()
+  data.append('file', file.file, file.name)
+  return await api.post('/attachments/create', data, {
+    onUploadProgress: e => {
+      const progress = parseInt(`${Math.round((e.loaded * 100) / e.total)}`)
+
+      setUploadedFiles((uploadedFiles: UploadedFileType[] | null) => {
+        if (uploadedFiles) {
+          return uploadedFiles.map(uploadedFile => {
+            return uploadedFile.id === file.id
+              ? { ...uploadedFile, progress }
+              : uploadedFile
+          })
+        }
+        return null
+      })
     }
   })
 }
