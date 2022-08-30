@@ -24,16 +24,16 @@ import {
   AttachmentData
 } from '../../../redux'
 
-interface ModalImageProps {
+interface AttachmentListModalImageProps {
   idImageOpenModal: number | null
   setIdImageOpenModal(id: number | null): void
   attachment: AttachmentData
 }
-export const ModalImage = ({
+export const AttachmentListModalImage = ({
   idImageOpenModal,
   setIdImageOpenModal,
   attachment
-}: ModalImageProps) => {
+}: AttachmentListModalImageProps) => {
   const {
     deleteAttachmentListDeleted,
     deleteAttachmentListError,
@@ -46,7 +46,7 @@ export const ModalImage = ({
   const [isUpdateAttachment, setIsUpdateAttachment] = React.useState(false)
   const [isDeleteAttachment, setIsDeleteAttachment] = React.useState(false)
 
-  const dateAttachment = DateTime.fromISO(attachment.created_at)
+  const dateAttachment = DateTime.fromISO(attachment.createdAt)
     .setLocale('pt-BR')
     .toFormat("dd 'de' MMMM 'de' yyyy")
 
@@ -171,9 +171,7 @@ export const ModalImage = ({
                   onClick={handleUpdateAttachment}
                   loading={isUpdateAttachment}
                   variant="contained"
-                  disabled={
-                    !!updateAttachmentUpdated || attachment.title === title
-                  }
+                  disabled={attachment.title === title}
                   color="success"
                 >
                   Salvar

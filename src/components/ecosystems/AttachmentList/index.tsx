@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Paper, TablePagination } from '@mui/material'
 
-import { ModalImage } from '../../molecules/ModalImage'
+import { AttachmentListModalImage } from '../../molecules/AttachmentListModalImage'
 import {
   useAppSelector,
   reduxAttachmentsGetAttachmentListFunction,
@@ -181,7 +181,7 @@ export const AttachmentList = () => {
             labelRowsPerPage="Linhas por páginas:"
           />
           {idImageOpenModal && attachmentModal && (
-            <ModalImage
+            <AttachmentListModalImage
               idImageOpenModal={idImageOpenModal}
               setIdImageOpenModal={setIdImageOpenModal}
               attachment={attachmentModal}
