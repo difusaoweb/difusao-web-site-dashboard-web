@@ -51,10 +51,7 @@ export interface ReduxAttachmentsGetAttachmentReducerPayload {
 
 export interface ReduxAttachmentsCreateAttachmentServiceParameters {
   file: UploadedFileType
-  // setUploadedFiles(uploadedFiles: UploadedFileType[] | null): void
-  setUploadedFiles: React.Dispatch<
-    React.SetStateAction<UploadedFileType[] | null>
-  >
+  setUploadedFiles(value: React.SetStateAction<UploadedFileType[] | null>): void
 }
 export type ReduxAttachmentsCreateAttachmentFunctionDispatch = ReturnType<
   typeof AttachmentActionTypes | typeof AlertActionTypes
@@ -82,6 +79,10 @@ export interface ReduxAttachmentsUpdateAttachmentReducerPayload {
   failure: ErrorStatusOrNull
 }
 
+export interface ReduxAttachmentsDeleteAttachmentListFunctionParameters {
+  attachmentsId: number[]
+  setAttachmentsHaveBeenDeleted(value: React.SetStateAction<boolean>): void
+}
 export interface ReduxAttachmentsDeleteAttachmentListServiceParameters {
   attachmentsId: number[]
 }
@@ -90,7 +91,6 @@ export type ReduxAttachmentsDeleteAttachmentListFunctionDispatch = ReturnType<
 >
 export interface ReduxAttachmentsDeleteAttachmentListReducerPayload {
   success: {
-    deleted: boolean
     attachmentsId: number[]
   } | null
   failure: ErrorStatusOrNull
@@ -155,7 +155,6 @@ export interface AttachmentState {
   updateAttachmentUpdated: BooleanOrNull
   updateAttachmentError: ErrorStatusOrNull
 
-  deleteAttachmentListDeleted: BooleanOrNull
   deleteAttachmentListError: ErrorStatusOrNull
 }
 

@@ -21,7 +21,7 @@ import {
   REDUX_ATTACHMENTS_UPDATE_ATTACHMENT,
   ReduxAttachmentsDeleteAttachmentListReducerPayload,
   REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST,
-  ReduxAttachmentsDeleteAttachmentListServiceParameters,
+  ReduxAttachmentsDeleteAttachmentListFunctionParameters,
   ReduxAttachmentsDeleteAttachmentListFunctionDispatch,
   REDUX_ATTACHMENTS_CLEAR_STATE,
   UploadedFileType
@@ -290,20 +290,22 @@ const reduxAttachmentsDeleteAttachmentListAction: ActionCreator<
   return { type: REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST, payload }
 }
 export function reduxAttachmentsDeleteAttachmentListFunction({
-  attachmentsId
-}: ReduxAttachmentsDeleteAttachmentListServiceParameters) {
+  attachmentsId,
+  setAttachmentsHaveBeenDeleted
+}: ReduxAttachmentsDeleteAttachmentListFunctionParameters) {
   return async (
     dispatch: Dispatch<ReduxAttachmentsDeleteAttachmentListFunctionDispatch>
   ) => {
     try {
-      const { data } = await attachmentsService.deleteAttachmentList({
+      await attachmentsService.deleteAttachmentList({
         attachmentsId
       })
-      const deleted = data?.success?.deleted
+
+      setAttachmentsHaveBeenDeleted(true)
 
       dispatch(
         reduxAttachmentsDeleteAttachmentListAction({
-          success: { deleted, attachmentsId },
+          success: { attachmentsId },
           failure: null
         })
       )
@@ -320,6 +322,8 @@ export function reduxAttachmentsDeleteAttachmentListFunction({
         err as AxiosError
         status = err.response?.status ?? null
       }
+
+      setAttachmentsHaveBeenDeleted(false)
 
       switch (status) {
         default:

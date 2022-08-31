@@ -19,7 +19,6 @@ const initialState: AttachmentState = {
   createAttachmentError: null,
   updateAttachmentUpdated: null,
   updateAttachmentError: null,
-  deleteAttachmentListDeleted: null,
   deleteAttachmentListError: null
 }
 
@@ -115,13 +114,11 @@ export function attachmentsReducer(
         return {
           ...state,
           getAttachmentListAttachments,
-          deleteAttachmentListDeleted: action.payload.success.deleted ?? null,
           deleteAttachmentListError: null
         }
       } else {
         return {
           ...state,
-          deleteAttachmentListDeleted: null,
           deleteAttachmentListError: action.payload.failure
         }
       }
