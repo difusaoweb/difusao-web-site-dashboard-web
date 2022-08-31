@@ -1,7 +1,6 @@
 import * as React from 'react'
 import {
   Modal,
-  Button,
   Card,
   CardHeader,
   CardContent,
@@ -16,77 +15,71 @@ import LoadingButton from '@mui/lab/LoadingButton'
 import { DateTime } from 'luxon'
 
 import {
-  useAppSelector,
   useAppDispatch,
   reduxAttachmentsUpdateAttachmentFunction,
   reduxAttachmentsDeleteAttachmentListFunction,
-  reduxAttachmentsClearStateFunction,
   AttachmentData
 } from '../../../redux'
 
-interface AttachmentListModalImageProps {
-  idImageOpenModal: number | null
-  setIdImageOpenModal(id: number | null): void
+interface AttachmentListModalProps {
+  setAttachmentModalId(value: React.SetStateAction<number | null>): void
   attachment: AttachmentData
+  attachmentsHaveBeenDeleted: boolean
+  setAttachmentsHaveBeenDeleted(value: React.SetStateAction<boolean>): void
 }
-export const AttachmentListModalImage = ({
-  idImageOpenModal,
-  setIdImageOpenModal,
-  attachment
-}: AttachmentListModalImageProps) => {
-  const {
-    deleteAttachmentListDeleted,
-    deleteAttachmentListError,
-    updateAttachmentUpdated,
-    updateAttachmentError
-  } = useAppSelector(state => state.attachments)
+export const AttachmentListModal = ({
+  setAttachmentModalId,
+  attachment,
+  attachmentsHaveBeenDeleted,
+  setAttachmentsHaveBeenDeleted
+}: AttachmentListModalProps) => {
   const dispatch = useAppDispatch()
 
   const [title, setTitle] = React.useState<string | null>(attachment.title)
-  const [isUpdateAttachment, setIsUpdateAttachment] = React.useState(false)
-  const [isDeleteAttachment, setIsDeleteAttachment] = React.useState(false)
+  const [loadingUpdateAttachment, setLoadingUpdateAttachment] =
+    React.useState(false)
+  const [loadingDeleteAttachmentList, setLoadingDeleteAttachmentList] =
+    React.useState(false)
 
   const dateAttachment = DateTime.fromISO(attachment.createdAt)
     .setLocale('pt-BR')
     .toFormat("dd 'de' MMMM 'de' yyyy")
 
   async function handleUpdateAttachment() {
-    if (isUpdateAttachment || !title) return
-    setIsUpdateAttachment(true)
+    if (loadingUpdateAttachment || !title) return
+
+    setLoadingUpdateAttachment(true)
     await dispatch(
       reduxAttachmentsUpdateAttachmentFunction({
         attachmentId: attachment.id,
         attachmentTitle: title
       })
     )
-    setIsUpdateAttachment(false)
+    setLoadingUpdateAttachment(false)
   }
 
-  async function handleDeleteAttachment() {
-    if (isDeleteAttachment) return
-    setIsDeleteAttachment(true)
+  async function handleDeleteAttachmentList() {
+    if (loadingDeleteAttachmentList) return
+
+    setLoadingDeleteAttachmentList(true)
     await dispatch(
       reduxAttachmentsDeleteAttachmentListFunction({
-        attachmentsId: [attachment.id]
+        attachmentsId: [attachment.id],
+        setAttachmentsHaveBeenDeleted
       })
     )
-    setIsDeleteAttachment(false)
+    setLoadingDeleteAttachmentList(false)
   }
 
   React.useEffect(() => {
-    if (!deleteAttachmentListDeleted) return
-    dispatch(
-      reduxAttachmentsClearStateFunction(
-        'REDUX_ATTACHMENTS_DELETE_ATTACHMENT_LIST'
-      )
-    )
-    setIdImageOpenModal(null)
-  }, [deleteAttachmentListDeleted])
+    if (!attachmentsHaveBeenDeleted) return
+    setAttachmentModalId(null)
+  }, [attachmentsHaveBeenDeleted])
 
   return (
     <Modal
-      open={!!idImageOpenModal ?? false}
-      onClose={() => setIdImageOpenModal(null)}
+      open={!!attachment ?? false}
+      onClose={() => setAttachmentModalId(null)}
       aria-labelledby="modal-modal-title"
       aria-describedby="modal-modal-description"
     >
@@ -105,7 +98,7 @@ export const AttachmentListModalImage = ({
         <CardHeader
           title="Detalhes da Mídia"
           action={
-            <IconButton onClick={() => setIdImageOpenModal(null)}>
+            <IconButton onClick={() => setAttachmentModalId(null)}>
               <CloseIcon />
             </IconButton>
           }
@@ -169,7 +162,7 @@ export const AttachmentListModalImage = ({
               >
                 <LoadingButton
                   onClick={handleUpdateAttachment}
-                  loading={isUpdateAttachment}
+                  loading={loadingUpdateAttachment}
                   variant="contained"
                   disabled={attachment.title === title}
                   color="success"
@@ -177,10 +170,10 @@ export const AttachmentListModalImage = ({
                   Salvar
                 </LoadingButton>
                 <LoadingButton
-                  onClick={handleDeleteAttachment}
-                  loading={isDeleteAttachment}
+                  onClick={handleDeleteAttachmentList}
+                  loading={loadingDeleteAttachmentList}
                   variant="contained"
-                  disabled={!!deleteAttachmentListDeleted}
+                  disabled={loadingDeleteAttachmentList}
                   color="error"
                 >
                   Deletar
