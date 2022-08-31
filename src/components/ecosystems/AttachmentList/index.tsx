@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Paper, TablePagination } from '@mui/material'
 
-import { AttachmentListModalImage } from '../../molecules/AttachmentListModalImage'
+import { AttachmentListModal } from '../../molecules/AttachmentListModal'
 import {
   useAppSelector,
   reduxAttachmentsGetAttachmentListFunction,
@@ -9,57 +9,44 @@ import {
   useAppDispatch,
   AttachmentData
 } from '../../../redux'
-import { Loading } from '../../atoms/Loading'
 import { AttachmentTableTopbar } from '../../molecules/AttachmentTableTopbar'
 import { AttachmentCardImage } from '../../molecules/AttachmentCardImage'
 import styles from './index.module.scss'
 
 export const AttachmentList = () => {
-  const {
-    getAttachmentListAttachments,
-    getAttachmentListLastPage,
-    getAttachmentListTotal,
-    deleteAttachmentListDeleted,
-    deleteAttachmentListError
-  } = useAppSelector(state => state.attachments)
+  const { getAttachmentListAttachments, getAttachmentListTotal } =
+    useAppSelector(state => state.attachments)
   const dispatch = useAppDispatch()
 
-  const [rows, setRows] = React.useState<AttachmentData[] | null>(null)
-  const [isOnGetAttachmentList, setIsOnGetAttachmentList] = React.useState(true)
+  const [gridItems, setGridItems] = React.useState<AttachmentData[] | null>(
+    null
+  )
+  const [onGetAttachmentList, setOnGetAttachmentList] = React.useState(true)
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
   const [isLoadingGetAttachmentList, setIsLoadingGetAttachmentList] =
     React.useState(false)
-  const [isLoadingDeleteAttachmentList, setIsLoadingDeleteAttachmentList] =
+  const [loadingDeleteAttachmentList, setLoadingDeleteAttachmentList] =
     React.useState(false)
-  const [idImageOpenModal, setIdImageOpenModal] = React.useState<number | null>(
-    null
-  )
-  const [selectedsDestroy, setSelectedsDestroy] = React.useState<
-    number[] | null
+  const [attachmentModalId, setAttachmentModalId] = React.useState<
+    number | null
   >(null)
-  const [isSetRowsTable, setIsSetRowsTable] = React.useState(false)
+  const [onSetGrid, setOnSetGrid] = React.useState(false)
   const [countAllRows, setCountAllRows] = React.useState(0)
   const [pageQuery, setPageQuery] = React.useState(1)
   const [pageRows, setPageRows] = React.useState(0)
   const [perPageRows, setPerPageRows] = React.useState(50)
+  const [attachmentsHaveBeenDeleted, setAttachmentsHaveBeenDeleted] =
+    React.useState(false)
 
-  function handleChangePage(thePage: number) {
-    setPageRows(thePage)
-    if (thePage === pageQuery) {
-      setPageQuery(page => page + 1)
-      setIsOnGetAttachmentList(true)
-    } else {
-      setSelectedsDestroy(null)
-      setIsSetRowsTable(true)
-    }
-    setSelecteds(null)
-  }
+  const attachmentModal =
+    getAttachmentListAttachments?.find(item => item.id === attachmentModalId) ??
+    null
 
-  function setRowsTable() {
-    setIsSetRowsTable(false)
+  function setGrid() {
+    setOnSetGrid(false)
     if (getAttachmentListAttachments) {
       if (!getAttachmentListTotal) return
-      setRows(
+      setGridItems(
         getAttachmentListAttachments.slice(
           pageRows * perPageRows,
           pageRows * perPageRows +
@@ -67,35 +54,38 @@ export const AttachmentList = () => {
         )
       )
     } else {
-      setRows(null)
+      setGridItems(null)
     }
     setCountAllRows(getAttachmentListTotal ?? 0)
   }
 
+  function resetGrid() {
+    setPageQuery(1)
+    setPageRows(0)
+    setSelecteds(null)
+    setAttachmentsHaveBeenDeleted(false)
+    setOnGetAttachmentList(true)
+  }
+
   function handleChangeRowsPerPage(thePerPage: number) {
     setPerPageRows(thePerPage)
-    setPageRows(0)
-    setPageQuery(1)
-    setSelecteds(null)
-    setSelectedsDestroy(null)
-    setIsOnGetAttachmentList(true)
+    resetGrid()
   }
 
-  function resetTable() {
-    setPageQuery(1)
-    setPageRows(0)
+  function handleChangePage(thePage: number) {
+    setPageRows(thePage)
+    if (thePage === pageQuery) {
+      setPageQuery(page => page + 1)
+      setOnGetAttachmentList(true)
+    } else {
+      setOnSetGrid(true)
+    }
     setSelecteds(null)
-    setSelectedsDestroy(null)
-    setIsOnGetAttachmentList(true)
   }
 
-  const attachmentModal =
-    getAttachmentListAttachments?.find(item => item.id === idImageOpenModal) ??
-    null
-
-  async function onGetAttachmentList() {
+  async function getAttachmentList() {
     if (isLoadingGetAttachmentList) return
-    setIsOnGetAttachmentList(false)
+    setOnGetAttachmentList(false)
 
     setIsLoadingGetAttachmentList(true)
     await dispatch(
@@ -107,64 +97,63 @@ export const AttachmentList = () => {
     setIsLoadingGetAttachmentList(false)
   }
 
-  async function onDeleteAttachmentList() {
-    if (isLoadingDeleteAttachmentList || !selecteds) return
+  async function deleteAttachmentList() {
+    if (loadingDeleteAttachmentList || !selecteds) return
 
-    setIsLoadingDeleteAttachmentList(true)
+    setLoadingDeleteAttachmentList(true)
     await dispatch(
       reduxAttachmentsDeleteAttachmentListFunction({
-        attachmentsId: selecteds
+        attachmentsId: selecteds,
+        setAttachmentsHaveBeenDeleted
       })
     )
-    setIsLoadingDeleteAttachmentList(false)
+    setLoadingDeleteAttachmentList(false)
   }
 
   React.useEffect(() => {
-    if (!isOnGetAttachmentList) return
-    onGetAttachmentList()
-  }, [isOnGetAttachmentList])
+    if (!onGetAttachmentList) return
+    getAttachmentList()
+  }, [onGetAttachmentList])
 
   React.useEffect(() => {
     if (!getAttachmentListAttachments) return
-    setRowsTable()
+    setGrid()
   }, [getAttachmentListAttachments])
-  React.useEffect(() => {
-    if (!isSetRowsTable) return
-    setRowsTable()
-  }, [isSetRowsTable])
 
   React.useEffect(() => {
-    if (!selectedsDestroy) return
-    onDeleteAttachmentList()
-  }, [selectedsDestroy])
+    if (!onSetGrid) return
+    setGrid()
+  }, [onSetGrid])
 
   React.useEffect(() => {
-    if (!deleteAttachmentListDeleted) return
-    resetTable()
-  }, [deleteAttachmentListDeleted])
+    if (!attachmentsHaveBeenDeleted) return
+    resetGrid()
+  }, [attachmentsHaveBeenDeleted])
+
+  console.log('selecteds', selecteds)
 
   return (
     <Paper sx={{ width: '100%', mb: 2 }}>
       <AttachmentTableTopbar
         numSelected={selecteds?.length ?? 0}
-        loading={isLoadingGetAttachmentList || isLoadingDeleteAttachmentList}
-        handleDeleteAllSelected={onDeleteAttachmentList}
+        loading={isLoadingGetAttachmentList || loadingDeleteAttachmentList}
+        handleDeleteAllSelected={deleteAttachmentList}
         setSelecteds={setSelecteds}
-        attachments={rows}
+        attachments={gridItems}
         setPage={setPageQuery}
-        setIsOnGetAttachmentList={setIsOnGetAttachmentList}
-        resetTable={resetTable}
+        setIsOnGetAttachmentList={setOnGetAttachmentList}
+        resetTable={resetGrid}
       />
-      {rows ? (
+      {gridItems ? (
         <>
           <div className={styles.grid}>
-            {rows.map(attachment => (
+            {gridItems.map(attachment => (
               <AttachmentCardImage
                 key={attachment.id}
                 attachment={attachment}
                 selecteds={selecteds}
                 setSelecteds={setSelecteds}
-                setIdImageOpenModal={setIdImageOpenModal}
+                setAttachmentModalId={setAttachmentModalId}
               />
             ))}
           </div>
@@ -180,11 +169,12 @@ export const AttachmentList = () => {
             }
             labelRowsPerPage="Linhas por páginas:"
           />
-          {idImageOpenModal && attachmentModal && (
-            <AttachmentListModalImage
-              idImageOpenModal={idImageOpenModal}
-              setIdImageOpenModal={setIdImageOpenModal}
+          {attachmentModal && (
+            <AttachmentListModal
+              setAttachmentModalId={setAttachmentModalId}
               attachment={attachmentModal}
+              attachmentsHaveBeenDeleted={attachmentsHaveBeenDeleted}
+              setAttachmentsHaveBeenDeleted={setAttachmentsHaveBeenDeleted}
             />
           )}
         </>
