@@ -7,13 +7,13 @@ interface AttachmentCardImageProps {
   attachment: AttachmentData
   selecteds: number[] | null
   setSelecteds(ids: number[] | null): void
-  setIdImageOpenModal(id: number): void
+  setAttachmentModalId(value: number): void
 }
 export const AttachmentCardImage = ({
   attachment,
   selecteds,
   setSelecteds,
-  setIdImageOpenModal
+  setAttachmentModalId
 }: AttachmentCardImageProps) => {
   function handleToggleCheckbox(id: number) {
     if (selecteds) {
@@ -50,7 +50,7 @@ export const AttachmentCardImage = ({
   return (
     <ImageListItem
       onClick={e => {
-        if (!selecteds) setIdImageOpenModal(attachment.id)
+        if (!selecteds) setAttachmentModalId(attachment.id)
       }}
     >
       <img
