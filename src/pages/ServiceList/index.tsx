@@ -8,7 +8,7 @@ import { ServiceList } from '../../components/ecosystems/ServiceList'
 
 export const ServiceListPage: React.FC = () => {
   return (
-    <PageContainer>
+    <PageContainer title="Serviços">
       <>
         <Box className={styles.pageTopBar}>
           <Box className={styles.box}>
