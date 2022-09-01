@@ -48,7 +48,7 @@ export const AttachmentAddPage: React.FC = () => {
 
   return (
     <>
-      <PageContainer>
+      <PageContainer title="Adicionar">
         <>
           <Box className={styles.pageTopBar}>
             <Box className={styles.box}>
