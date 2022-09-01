@@ -1,18 +1,7 @@
 import * as React from 'react'
-import {
-  Box,
-  Toolbar,
-  Typography,
-  Container,
-  Grid,
-  Button,
-  Paper
-} from '@mui/material'
+import { Box, Typography, Grid, Paper } from '@mui/material'
 
-import { ProgressBar } from '../../components/atoms/ProgressBar'
-import { Copyright } from '../../components/atoms/Copyright'
-import { AppBar } from '../../components/atoms/AppBar'
-import { SideBar } from '../../components/molecules/SideBar'
+import { PageContainer } from '../../components/atoms/PageContainer'
 import { AttachmentAddUploadArea } from '../../components/molecules/AttachmentAddUploadArea'
 import { AttachmentAddUploadList } from '../../components/molecules/AttachmentAddUploadList'
 import {
@@ -27,10 +16,6 @@ export const AttachmentAddPage: React.FC = () => {
   // const { createAttachmentReturn } = useAppSelector(state => state.attachments)
   const dispatch = useAppDispatch()
 
-  const [open, setOpen] = React.useState(true)
-  const toggleDrawer = () => {
-    setOpen(!open)
-  }
   const [isOnCreateAttachment, setIsOnCreateAttachment] = React.useState(false)
   const [isLoadingCreateAttachment, setIsLoadingCreateAttachment] =
     React.useState(false)
@@ -61,56 +46,39 @@ export const AttachmentAddPage: React.FC = () => {
     onCreateAttachment()
   }, [isOnCreateAttachment])
 
-  console.log('uploadedFiles', uploadedFiles)
-
   return (
     <>
-      <Box className={styles.containerGeneral}>
-        <AppBar open={open} toggleDrawer={toggleDrawer} title="Adicionar" />
-        <SideBar open={open} toggleDrawer={toggleDrawer} />
-        <Box
-          component="main"
-          sx={{
-            backgroundColor: theme =>
-              theme.palette.mode === 'light'
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900]
-          }}
-          className={styles.main}
-        >
-          <Toolbar />
-          <Container maxWidth="lg" className={styles.container}>
-            <Box className={styles.pageTopBar}>
-              <Box className={styles.box}>
-                <Typography component="h1" className={styles.titlePage}>
-                  Enviar nova mídia
-                </Typography>
-                <Typography component="p">
-                  Tipos de arquivo permitidos: jpg, jpeg, png.
-                </Typography>
-              </Box>
+      <PageContainer>
+        <>
+          <Box className={styles.pageTopBar}>
+            <Box className={styles.box}>
+              <Typography component="h1" className={styles.titlePage}>
+                Enviar nova mídia
+              </Typography>
+              <Typography component="p">
+                Tipos de arquivo permitidos: jpg, jpeg, png.
+              </Typography>
             </Box>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <Paper className={styles.paper}>
-                  <AttachmentAddUploadArea
-                    uploadedFiles={uploadedFiles}
-                    setUploadedFiles={setUploadedFiles}
-                    setIsOnCreateAttachment={setIsOnCreateAttachment}
-                  />
-                  {uploadedFiles && (
-                    <>
-                      <div className={styles.space} />
-                      <AttachmentAddUploadList uploadedFiles={uploadedFiles} />
-                    </>
-                  )}
-                </Paper>
-              </Grid>
+          </Box>
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Paper className={styles.paper}>
+                <AttachmentAddUploadArea
+                  uploadedFiles={uploadedFiles}
+                  setUploadedFiles={setUploadedFiles}
+                  setIsOnCreateAttachment={setIsOnCreateAttachment}
+                />
+                {uploadedFiles && (
+                  <>
+                    <div className={styles.space} />
+                    <AttachmentAddUploadList uploadedFiles={uploadedFiles} />
+                  </>
+                )}
+              </Paper>
             </Grid>
-          </Container>
-          <Copyright />
-        </Box>
-      </Box>
+          </Grid>
+        </>
+      </PageContainer>
     </>
   )
 }
