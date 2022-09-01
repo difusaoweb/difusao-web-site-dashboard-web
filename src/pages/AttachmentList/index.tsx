@@ -9,7 +9,7 @@ import { AttachmentList } from '../../components/ecosystems/AttachmentList'
 export const AttachmentListPage: React.FC = () => {
   return (
     <>
-      <PageContainer>
+      <PageContainer title="Mídias">
         <>
           <Box className={styles.pageTopBar}>
             <Box className={styles.box}>
