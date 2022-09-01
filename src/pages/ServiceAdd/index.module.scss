@@ -1,0 +1,14 @@
+.pageTopBar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40px;
+  
+  .box {
+    flex-grow: 1;
+
+    .titlePage {
+      font-weight: bold;
+      font-size: 24px;
+    }
+  }
+}
