@@ -8,8 +8,9 @@ import styles from './index.module.scss'
 
 interface PageContainerProps {
   children: JSX.Element
+  title: string
 }
-export const PageContainer = ({ children }: PageContainerProps) => {
+export const PageContainer = ({ children, title }: PageContainerProps) => {
   const [open, setOpen] = React.useState(true)
   const toggleDrawer = () => {
     setOpen(!open)
@@ -18,7 +19,7 @@ export const PageContainer = ({ children }: PageContainerProps) => {
   return (
     <>
       <Box className={styles.containerGeneral}>
-        <AppBar open={open} toggleDrawer={toggleDrawer} title="Adicionar" />
+        <AppBar open={open} toggleDrawer={toggleDrawer} title={title} />
         <SideBar open={open} toggleDrawer={toggleDrawer} />
         <Box
           component="main"
