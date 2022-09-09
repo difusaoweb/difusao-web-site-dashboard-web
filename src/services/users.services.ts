@@ -1,36 +1,60 @@
 import { AxiosResponse } from 'axios'
 
 import { api } from './api'
-import { CreateUserData } from '../redux'
+import {
+  ReduxUsersGetUserListServiceParameters,
+  ReduxUsersGetUserServiceParameters,
+  ReduxUsersCreateUserServiceParameters,
+  ReduxUsersUpdateUserServiceParameters,
+  ReduxUsersDeleteUserListServiceParameters
+} from '../redux'
 
-export const usersService = { getUsers, createUser, deleteUsers }
-
-async function getUsers(): Promise<AxiosResponse> {
-  return await api.get('/users/list')
+async function getUserList(
+  parameters: ReduxUsersGetUserListServiceParameters
+): Promise<AxiosResponse> {
+  return await api.get('/users/list', {
+    params: parameters
+  })
 }
 
-async function createUser({
-  name,
-  description,
-  stock,
-  images,
-  sku,
-  price,
-  categoryId
-}: CreateUserData): Promise<AxiosResponse> {
-  return await api.get('/users/create', {
+async function getUser({
+  userId
+}: ReduxUsersGetUserServiceParameters): Promise<AxiosResponse> {
+  return await api.get('/users/show', {
+    params: { user_id: userId }
+  })
+}
+
+async function createUser(
+  parameters: ReduxUsersCreateUserServiceParameters
+): Promise<AxiosResponse> {
+  return await api.get('/users/create', { params: parameters })
+}
+
+async function updateUser({
+  userId,
+  userTitle
+}: ReduxUsersUpdateUserServiceParameters): Promise<AxiosResponse> {
+  return await api.get('/users/update', {
     params: {
-      name,
-      description,
-      stock: stock ? 1 : 0,
-      images,
-      sku,
-      price,
-      category_id: categoryId
+      user_id: userId,
+      user_title: userTitle
     }
   })
 }
 
-async function deleteUsers(ids: number[]): Promise<AxiosResponse> {
-  return await api.get('/users/delete', { params: { service_ids: ids } })
+async function deleteUserList(
+  parameters: ReduxUsersDeleteUserListServiceParameters
+): Promise<AxiosResponse> {
+  return await api.get('/users/delete', {
+    params: parameters
+  })
+}
+
+export const usersService = {
+  getUserList,
+  getUser,
+  createUser,
+  updateUser,
+  deleteUserList
 }
