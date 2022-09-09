@@ -1,0 +1,22 @@
+.container {
+  .tdCheckbox {
+    padding: 0 0 0 4px;
+  }
+  .aEdit {
+    color: unset;
+    text-decoration: none;
+    &:hover {
+      color: var(--palette-primary-main);
+    }
+  }
+}
+.tableRowCellMenu {
+  .itemDelete {
+    .icon, .text {
+      color: var(--palette-error-main);
+    }
+  }
+  .icon, .iconEdit {
+    font-size: 1.25rem;
+  }
+}

@@ -1,19 +1,13 @@
 import * as React from 'react'
-import { alpha, useTheme } from '@mui/material/styles'
-import {
-  Replay as ReplayIcon,
-  MoreVert as MoreVertIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon
-} from '@mui/icons-material'
+import { alpha } from '@mui/material/styles'
+import { Replay as ReplayIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { visuallyHidden } from '@mui/utils'
-import { DateTime } from 'luxon'
 import {
   Box,
   Table,
   TableBody,
   TableCell,
-  TableRow,
+  TableRow as MuiTableRow,
   TableContainer,
   TablePagination,
   TableSortLabel,
@@ -23,101 +17,41 @@ import {
   Paper,
   Checkbox,
   IconButton,
-  Menu,
-  MenuItem,
   CircularProgress,
-  ListItemIcon,
-  ListItemText,
-  Tooltip,
-  Avatar
+  Tooltip
 } from '@mui/material'
-import { useSelector, useDispatch } from 'react-redux'
 
-import { getUsers, deleteUsers, UserData, RootState } from '../../../redux'
+import {
+  GetUserListUserType,
+  useAppSelector,
+  reduxUsersGetUserListFunction,
+  reduxUsersDeleteUserListFunction,
+  useAppDispatch
+} from '../../../redux'
+import { TableRowUser } from '../../molecules/TableRowUser'
+import { stableSort, getComparator, OrderType } from '../../../utils'
+import {
+  HeadCellType,
+  EnhancedTablePropsType,
+  EnhancedTableToolbarPropsType
+} from './index.types'
 
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1
-  }
-  return 0
-}
-
-type Order = 'asc' | 'desc'
-
-function getComparator<Key extends keyof any>(
-  order: Order,
-  orderBy: Key
-): (
-  a: { [key in Key]: typeof Key },
-  b: { [key in Key]: typeof Key }
-) => number {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy)
-}
-
-function stableSort<T>(
-  array: readonly T[],
-  comparator: (a: T, b: T) => number
-) {
-  const stabilizedThis = array.map((el, index) => [el, index] as [T, number])
-  stabilizedThis.sort((a, b) => {
-    const order = comparator(a[0], b[0])
-    if (order !== 0) {
-      return order
-    }
-    return a[1] - b[1]
-  })
-  return stabilizedThis.map(el => el[0])
-}
-
-interface HeadCell {
-  id: keyof UserData
-  label: string
-  numeric: boolean
-  noShort?: true
-}
-
-const headCells: readonly HeadCell[] = [
-  {
-    id: 'image',
-    numeric: false,
-    label: 'Imagem',
-    noShort: true
-  },
+const headCells: readonly HeadCellType[] = [
   {
     id: 'name',
-    numeric: false,
-    label: 'Nome'
+    label: 'Name'
   },
   {
     id: 'email',
-    numeric: true,
     label: 'Email'
   },
   {
-    id: 'created_at',
-    numeric: false,
+    id: 'createdAt',
     label: 'Data'
   }
 ]
 
-interface EnhancedTableProps {
-  numSelected: number
-  onRequestSort: (
-    event: React.MouseEvent<unknown>,
-    property: keyof UserData
-  ) => void
-  onSelectAllClick: (event: React.ChangeEvent<HTMLInputElement>) => void
-  order: Order
-  orderBy: string
-  rowCount: number
-}
-
-function EnhancedTableHead(props: EnhancedTableProps) {
+const EnhancedTableHead = (props: EnhancedTablePropsType) => {
   const {
     onSelectAllClick,
     order,
@@ -127,13 +61,14 @@ function EnhancedTableHead(props: EnhancedTableProps) {
     onRequestSort
   } = props
   const createSortHandler =
-    (property: keyof UserData) => (event: React.MouseEvent<unknown>) => {
+    (property: keyof GetUserListUserType) =>
+    (event: React.MouseEvent<unknown>) => {
       onRequestSort(event, property)
     }
 
   return (
     <TableHead>
-      <TableRow>
+      <MuiTableRow>
         <TableCell padding="checkbox">
           <Checkbox
             color="primary"
@@ -173,22 +108,18 @@ function EnhancedTableHead(props: EnhancedTableProps) {
           </TableCell>
         ))}
         <TableCell></TableCell>
-      </TableRow>
+      </MuiTableRow>
     </TableHead>
   )
 }
 
-interface EnhancedTableToolbarProps {
-  loading: boolean
-  numSelected: number
-  onGetUsers(): void
-  handleRowCellDelete(ids: number[]): void
-  selecteds: number[]
-}
-
-const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
-  const { loading, numSelected, onGetUsers, handleRowCellDelete, selecteds } =
-    props
+const EnhancedTableToolbar = (props: EnhancedTableToolbarPropsType) => {
+  const {
+    loading,
+    numSelected,
+    handleReloadTable,
+    handleDeleteAllSelectedRows
+  } = props
 
   return (
     <Toolbar
@@ -225,7 +156,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
       )}
       {numSelected > 0 ? (
         <Tooltip title="Delete">
-          <IconButton onClick={() => handleRowCellDelete(selecteds)}>
+          <IconButton onClick={() => handleDeleteAllSelectedRows()}>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
@@ -234,7 +165,7 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
           {loading ? (
             <CircularProgress size={24} sx={{ margin: 1 }} />
           ) : (
-            <IconButton onClick={onGetUsers}>
+            <IconButton onClick={handleReloadTable}>
               <ReplayIcon />
             </IconButton>
           )}
@@ -244,41 +175,46 @@ const EnhancedTableToolbar = (props: EnhancedTableToolbarProps) => {
   )
 }
 
-export function UserList() {
-  const theme = useTheme()
-  const { usersList, deletedUsers } = useSelector(
-    (state: ReturnType<RootState>) => state.users
+export const UserList = () => {
+  const { getUserListUsers, getUserListTotal } = useAppSelector(
+    state => state.users
   )
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
 
-  const [loadingGetUsers, setLoadingGetUsers] = React.useState(false)
-  const [loadingDeleteUsers, setLoadingDeleteUsers] = React.useState(false)
-  const [rows, setRows] = React.useState<UserData[] | null>(null)
-  const [order, setOrder] = React.useState<Order>('desc')
-  const [orderBy, setOrderBy] = React.useState<keyof UserData>('created_at')
+  const [tableItems, setTableItems] = React.useState<
+    GetUserListUserType[] | null
+  >(null)
+  const [isLoadingGetUserList, setIsLoadingGetUserList] = React.useState(false)
+  const [isLoadingDeleteUserList, setIsLoadingDeleteUserList] =
+    React.useState(false)
+  const [countAllRows, setCountAllRows] = React.useState(0)
+  const [order, setOrder] = React.useState<OrderType>('desc')
+  const [orderBy, setOrderBy] =
+    React.useState<keyof GetUserListUserType>('createdAt')
   const [selecteds, setSelecteds] = React.useState<number[] | null>(null)
   const [selectedsDestroy, setSelectedsDestroy] = React.useState<
     number[] | null
   >(null)
-  const [page, setPage] = React.useState(0)
-  const [rowsPerPage, setRowsPerPage] = React.useState(50)
+  const [pageQuery, setPageQuery] = React.useState(1)
+  const [pageRows, setPageRows] = React.useState(0)
+  const [perPageRows, setPerPageRows] = React.useState(50)
+  const [usersHaveBeenDeleted, setUsersHaveBeenDeleted] = React.useState(false)
+  const [onGetUserList, setOnGetUserList] = React.useState(true)
+  const [onSetTable, setOnSetTable] = React.useState(false)
 
-  const [rowCellAnchorEl, setRowCellAnchorEl] = React.useState<any | null>(null)
-  const rowCellOpen = Boolean(rowCellAnchorEl)
-
-  const handleRequestSort = (
+  function handleRequestSort(
     event: React.MouseEvent<unknown>,
-    property: keyof UserData
-  ) => {
+    property: keyof GetUserListUserType
+  ) {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
     setOrderBy(property)
   }
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleSelectAllClick(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.checked) {
-      if (rows) {
-        const newSelecteds = rows.map(row => row.id)
+      if (tableItems) {
+        const newSelecteds = tableItems.map(tableItem => tableItem.id)
         setSelecteds(newSelecteds)
       }
       return
@@ -286,7 +222,23 @@ export function UserList() {
     setSelecteds(null)
   }
 
-  function handleRowCellCheckbox(id: number) {
+  function resetTable() {
+    setPageQuery(1)
+    setPageRows(0)
+    setSelecteds(null)
+    setSelectedsDestroy(null)
+    setOnGetUserList(true)
+  }
+
+  function handleReloadTable() {
+    resetTable()
+  }
+
+  function handleDeleteAllSelectedRows() {
+    setSelectedsDestroy(selecteds)
+  }
+
+  function handleRowCheckbox(id: number) {
     if (selecteds) {
       const selectedIndex = selecteds.indexOf(id)
       let newSelecteds: number[] = []
@@ -309,100 +261,110 @@ export function UserList() {
     }
   }
 
-  const handleChangePage = (event: unknown, newPage: number) => {
-    setPage(newPage)
-  }
-
-  const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10))
-    setPage(0)
-  }
-
-  function isSelected(id: number) {
-    if (selecteds) {
-      return selecteds.indexOf(id) !== -1
-    }
-    return false
-  }
-
-  const emptyRows =
-    page > 0 ? Math.max(0, (1 + page) * rowsPerPage - (rows?.length ?? 0)) : 0
-
-  function handleRowCellClick(index, event) {
-    setRowCellAnchorEl({ [index]: event.currentTarget })
-    setSelecteds(null)
-  }
-  function handleRowCellClose() {
-    setRowCellAnchorEl(null)
-  }
-
-  async function handleRowCellDelete(ids: number[]) {
-    if (loadingDeleteUsers) {
-      return
-    }
-
-    handleRowCellClose()
-    setSelecteds(null)
-    setSelectedsDestroy(ids)
-    console.log('handleRowCellDelete')
-    console.log(ids)
-
-    setLoadingDeleteUsers(true)
-    await dispatch(deleteUsers(ids))
-    setLoadingDeleteUsers(false)
-  }
-
-  function handleRowCellEdit(id: number) {
-    handleRowCellClose()
-    console.log('handleRowCellEdit')
-    console.log(id)
-  }
-
-  async function onGetUsers() {
-    if (loadingGetUsers) {
-      return
+  function handleChangePage(thePage: number) {
+    setPageRows(thePage)
+    if (thePage === pageQuery) {
+      setPageQuery(page => page + 1)
+      setOnGetUserList(true)
+    } else {
+      setOnSetTable(true)
     }
     setSelecteds(null)
-
-    setLoadingGetUsers(true)
-    await dispatch(getUsers())
-    setLoadingGetUsers(false)
   }
 
-  React.useEffect(() => {
-    onGetUsers()
-  }, [])
+  function handleChangeRowsPerPage(thePerPage: number) {
+    setPerPageRows(thePerPage)
+    setPageRows(0)
+    setPageQuery(1)
+    setSelecteds(null)
+    setOnGetUserList(true)
+  }
 
-  React.useEffect(() => {
-    if (usersList) {
-      setRows(usersList)
-    }
-  }, [usersList])
-
-  React.useEffect(() => {
-    if (deletedUsers) {
-      if (!!rows && !!selectedsDestroy) {
-        setRows(
-          rows.filter(
-            row => selectedsDestroy.filter(id => id === row.id).length < 1
-          )
+  function setTable() {
+    setOnSetTable(false)
+    if (getUserListUsers) {
+      if (!getUserListTotal) return
+      setTableItems(
+        getUserListUsers.slice(
+          pageRows * perPageRows,
+          pageRows * perPageRows +
+            (perPageRows === -1 ? getUserListTotal : perPageRows)
         )
-        setSelectedsDestroy(null)
-      }
+      )
+    } else {
+      setTableItems(null)
     }
-  }, [deletedUsers])
+    setCountAllRows(getUserListTotal ?? 0)
+  }
+
+  function resetGrid() {
+    setPageQuery(1)
+    setPageRows(0)
+    setSelecteds(null)
+    setUsersHaveBeenDeleted(false)
+    setOnGetUserList(true)
+  }
+
+  async function getUserList() {
+    if (isLoadingGetUserList) return
+    setOnGetUserList(false)
+
+    setIsLoadingGetUserList(true)
+    await dispatch(
+      reduxUsersGetUserListFunction({
+        page: pageQuery,
+        perPage: perPageRows
+      })
+    )
+    setIsLoadingGetUserList(false)
+  }
+
+  async function onDeleteUserList() {
+    if (isLoadingDeleteUserList || !selectedsDestroy) return
+
+    setIsLoadingDeleteUserList(true)
+    await dispatch(
+      reduxUsersDeleteUserListFunction({
+        usersId: selectedsDestroy,
+        setUsersHaveBeenDeleted
+      })
+    )
+    setIsLoadingDeleteUserList(false)
+  }
+
+  React.useEffect(() => {
+    if (!onGetUserList) return
+    getUserList()
+  }, [onGetUserList])
+  React.useEffect(() => {
+    if (!getUserListUsers) return
+    setTable()
+  }, [getUserListUsers])
+
+  React.useEffect(() => {
+    if (!onSetTable) return
+    setTable()
+  }, [onSetTable])
+
+  React.useEffect(() => {
+    if (!selectedsDestroy) return
+    onDeleteUserList()
+  }, [selectedsDestroy])
+  React.useEffect(() => {
+    if (!usersHaveBeenDeleted) return
+    resetGrid()
+  }, [usersHaveBeenDeleted])
+
+  console.log('getUserListUsers', getUserListUsers)
 
   return (
     <>
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar
           numSelected={selecteds?.length ?? 0}
-          loading={loadingGetUsers}
-          onGetUsers={onGetUsers}
-          handleRowCellDelete={handleRowCellDelete}
-          selecteds={selecteds ?? []}
+          loading={isLoadingGetUserList || isLoadingDeleteUserList}
+          handleReloadTable={handleReloadTable}
+          handleDeleteAllSelectedRows={handleDeleteAllSelectedRows}
         />
         <TableContainer>
           <Table
@@ -416,104 +378,32 @@ export function UserList() {
               orderBy={orderBy}
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
-              rowCount={rows?.length ?? 0}
+              rowCount={tableItems?.length ?? 0}
             />
-            {rows && (
+            {tableItems ? (
               <TableBody>
-                {stableSort(rows, getComparator(order, orderBy))
-                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((row, index) => {
-                    const isItemSelected = isSelected(row.id)
-                    const labelId = `enhanced-table-checkbox-${index}`
-
-                    const rowDateTimeString = DateTime.fromISO(
-                      row.created_at
-                    ).toFormat('dd/MM/yyyy HH:mm')
-
-                    return (
-                      <TableRow
-                        hover
-                        role="checkbox"
-                        aria-checked={isItemSelected}
-                        tabIndex={-1}
-                        key={row.id}
-                        selected={isItemSelected}
-                      >
-                        <TableCell padding="checkbox">
-                          <Checkbox
-                            color="primary"
-                            checked={isItemSelected}
-                            inputProps={{
-                              'aria-labelledby': labelId
-                            }}
-                            onClick={() => handleRowCellCheckbox(row.id)}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Avatar
-                            alt={row.name}
-                            src={row.image}
-                            variant="rounded"
-                            sx={{ width: 100, height: 100 }}
-                          />
-                        </TableCell>
-                        <TableCell align="left">{row.name}</TableCell>
-                        <TableCell align="left">{row.email}</TableCell>
-                        <TableCell align="left">{rowDateTimeString}</TableCell>
-                        <TableCell>
-                          <IconButton
-                            id="rowCellBasicButton"
-                            aria-controls={
-                              rowCellOpen ? 'rowCellBasicMenu' : undefined
-                            }
-                            aria-haspopup="true"
-                            aria-expanded={rowCellOpen ? 'true' : undefined}
-                            onClick={e => handleRowCellClick(index, e)}
-                          >
-                            <MoreVertIcon />
-                          </IconButton>
-                          <Menu
-                            id="rowCellBasicMenu"
-                            anchorEl={rowCellAnchorEl && rowCellAnchorEl[index]}
-                            open={Boolean(
-                              rowCellAnchorEl && rowCellAnchorEl[index]
-                            )}
-                            onClose={handleRowCellClose}
-                            MenuListProps={{
-                              'aria-labelledby': 'rowCellBasicButton'
-                            }}
-                          >
-                            <MenuItem
-                              onClick={() => handleRowCellDelete([row.id])}
-                            >
-                              <ListItemIcon>
-                                <DeleteIcon
-                                  fontSize="small"
-                                  sx={{ color: theme.palette.error.main }}
-                                />
-                              </ListItemIcon>
-                              <ListItemText
-                                sx={{ color: theme.palette.error.main }}
-                              >
-                                Deletar
-                              </ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={() => handleRowCellEdit(row.id)}>
-                              <ListItemIcon>
-                                <EditIcon fontSize="small" />
-                              </ListItemIcon>
-                              <ListItemText>Editar</ListItemText>
-                            </MenuItem>
-                          </Menu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                {emptyRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyRows }}>
-                    <TableCell colSpan={6} />
-                  </TableRow>
+                {stableSort(tableItems, getComparator(order, orderBy)).map(
+                  row => (
+                    <TableRowUser
+                      key={row.id}
+                      row={row}
+                      selecteds={selecteds}
+                      setSelecteds={setSelecteds}
+                      handleRowCheckbox={handleRowCheckbox}
+                      isLoadingGetUsers={isLoadingGetUserList}
+                      isLoadingDeleteUsers={isLoadingDeleteUserList}
+                      setSelectedsDestroy={setSelectedsDestroy}
+                    />
+                  )
                 )}
+              </TableBody>
+            ) : (
+              <TableBody>
+                <MuiTableRow>
+                  <TableCell colSpan={999}>
+                    Nenhum usuários encontrado.
+                  </TableCell>
+                </MuiTableRow>
               </TableBody>
             )}
           </Table>
@@ -521,11 +411,14 @@ export function UserList() {
         <TablePagination
           rowsPerPageOptions={[10, 50, 100, { value: -1, label: 'Todos' }]}
           component="div"
-          count={rows?.length ?? 0}
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          page={pageRows}
+          rowsPerPage={perPageRows}
+          count={countAllRows}
+          onPageChange={(e, page) => handleChangePage(page)}
+          onRowsPerPageChange={e =>
+            handleChangeRowsPerPage(Number(e.target.value))
+          }
+          labelRowsPerPage="Linhas por páginas:"
         />
       </Paper>
     </>
