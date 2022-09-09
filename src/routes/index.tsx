@@ -23,7 +23,7 @@ import { CaseListPage } from '../pages/CaseList'
 import { CaseAddPage } from '../pages/CaseAdd'
 import { AttachmentListPage } from '../pages/AttachmentList'
 import { AttachmentAddPage } from '../pages/AttachmentAdd'
-import { UsersList } from '../pages/UsersList'
+import { UserListPage } from '../pages/UserList'
 import { UsersAdd } from '../pages/UsersAdd'
 import { NotFound } from '../pages/404'
 
@@ -133,7 +133,7 @@ export const Routes = () => {
           path="/usuarios"
           element={
             <RequireAuth>
-              <UsersList />
+              <UserListPage />
             </RequireAuth>
           }
         />
